@@ -56,8 +56,8 @@ export const digitalWrite: Commands<digitalWriteFSA> = (board, action) => {
     return {
       ...action,
       error: {
-        code: ErrorCodes.BAD_MODE,
-        msg: 'Invalid mode for pin',
+        code: ErrorCodes.BAD_OUTPUT,
+        msg: 'Invalid output for pin',
       },
     };
   }

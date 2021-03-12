@@ -10,4 +10,4 @@ export const validOutput = (
   board: Board,
   pin: number,
   output: Board.PIN_STATE
-) => output === Board.PIN_STATE.LOW || output === Board.PIN_STATE.HIGH;
+) => output === board.LOW || output === board.HIGH;
