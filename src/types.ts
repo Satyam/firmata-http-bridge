@@ -16,11 +16,7 @@ export type FSA<Type extends string = string, Payload = any, Meta = any> = {
   };
 };
 
-export type Commands<
-  Type extends string = string,
-  Payload = any,
-  Meta = any
-> = (
+export type Commands<F extends FSA = FSA, Meta = any> = (
   board: Board,
-  action: FSA<Type, Payload, Meta>
-) => FSA<Type, Payload, Meta>;
+  action: F
+) => F;
