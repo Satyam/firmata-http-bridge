@@ -4,7 +4,7 @@ import { resolve } from 'path';
 import { config as envRead } from 'dotenv';
 
 // https://github.com/firmata/firmata.js/tree/master/packages/firmata.js
-import Firmata from 'firmata';
+import Board from 'firmata';
 
 import { FSA, Commands, ErrorCodes } from './types';
 import * as pinCmds from './pinCommands';
@@ -69,24 +69,13 @@ app.get('*', (req, res) => {
   });
 });
 
-let boardReady = false;
-
-app.use(function (req, res, next) {
-  if (boardReady) {
-    next();
-  } else {
-    res.status(503).send('Arduino Board not ready');
-  }
-});
-const board = new Firmata(process.env.REACT_APP_USB_PORT);
+const board = new Board(process.env.REACT_APP_USB_PORT);
 
 board.on('ready', () => {
   console.log('Arduino is ready to communicate');
-  boardReady = true;
+  http.listen(process.env.REACT_APP_HTTP_PORT, () =>
+    console.log(
+      `Example app listening on port ${process.env.REACT_APP_HTTP_PORT}!`
+    )
+  );
 });
-
-http.listen(process.env.REACT_APP_HTTP_PORT, () =>
-  console.log(
-    `Example app listening on port ${process.env.REACT_APP_HTTP_PORT}!`
-  )
-);
