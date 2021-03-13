@@ -6,8 +6,8 @@ import {
   pinModeFSA,
   digitalWrite,
   digitalWriteFSA,
-} from '../src/pinCommands';
-import { ErrorCodes } from '../src/types';
+} from './pinCommands';
+import { ErrorCodes } from './types';
 
 const LED_BUILTIN = 13;
 

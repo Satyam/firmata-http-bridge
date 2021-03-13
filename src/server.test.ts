@@ -1,8 +1,8 @@
-import { start, stop } from '../src/server';
+import Board from 'firmata';
 import { config as envRead } from 'dotenv';
 import fetch from 'node-fetch';
-import { FSA } from '../src/types';
-import Board from 'firmata';
+import { start, stop } from './server';
+import { FSA } from './types';
 
 const LED_BUILTIN = 13;
 
