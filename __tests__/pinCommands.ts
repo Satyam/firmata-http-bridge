@@ -22,6 +22,11 @@ beforeAll((done) => {
 
 afterEach(() => board.reset());
 
+afterAll((done) => {
+  // @ts-ignore
+  board.transport.close(done);
+});
+
 const buildModeAction = (
   mode: Board.PIN_MODE,
   pin: number = LED_BUILTIN
@@ -86,7 +91,6 @@ describe('digitalWrite', () => {
 
     const writeLow = buildWriteAction(board.LOW);
     expect(board.pins[LED_BUILTIN].value).toEqual(board.HIGH);
-    console.log(board.pins[LED_BUILTIN]);
     expect(digitalWrite(board, writeLow)).toBe(writeLow);
     expect(board.pins[LED_BUILTIN].value).toEqual(board.LOW);
   });

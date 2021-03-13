@@ -90,7 +90,13 @@ export function start() {
 }
 
 export function stop() {
-  console.log('Server closing');
-  http.close();
-  board.serialClose(board.SERIAL_PORT_IDs.DEFAULT);
+  return new Promise<void>((resolve, reject) => {
+    console.log('Server closing');
+    http.close();
+    // @ts-ignore
+    board.transport.close((error) => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
 }
