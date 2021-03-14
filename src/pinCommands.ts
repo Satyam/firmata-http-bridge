@@ -1,8 +1,6 @@
-import Board from 'firmata';
 import { validDigitalPin, validMode, validOutput } from './utils';
-import { FSA, Commands, ErrorCodes } from './types';
-
-export type pinModeFSA = FSA<'pinMode', { pin: number; mode: Board.PIN_MODE }>;
+import { Commands, ErrorCodes } from './types';
+import type { digitalWriteFSA, pinModeFSA } from './actionBuilders';
 
 export const pinMode: Commands<pinModeFSA> = (board, action) => {
   const {
@@ -32,11 +30,6 @@ export const pinMode: Commands<pinModeFSA> = (board, action) => {
   board.pinMode(pin, mode);
   return action;
 };
-
-export type digitalWriteFSA = FSA<
-  'digitalWrite',
-  { pin: number; output: Board.PIN_STATE }
->;
 
 export const digitalWrite: Commands<digitalWriteFSA> = (board, action) => {
   const {
