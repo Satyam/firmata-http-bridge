@@ -33,3 +33,19 @@ export function digitalWriteActionBuilder(
     },
   };
 }
+
+export function makeReply(request: FSA, extra: Omit<FSA, 'type'> = {}): FSA {
+  return {
+    type: `${request.type}_reply`,
+    payload: {
+      ...request.payload,
+      ...(extra.payload || {}),
+    },
+    meta: {
+      ...request.meta,
+      ...(extra.meta || {}),
+      date: new Date().toISOString(),
+    },
+    error: extra.error,
+  };
+}
