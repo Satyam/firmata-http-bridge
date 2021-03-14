@@ -2,10 +2,11 @@ import Board from 'firmata';
 import { config as envRead } from 'dotenv';
 
 import { pinMode, digitalWrite } from './pinCommands';
-
+import './jest-setup.util';
 import {
   pinModeActionBuilder,
   digitalWriteActionBuilder,
+  makeReply,
 } from './actionBuilders';
 import { ErrorCodes } from './types';
 
@@ -28,11 +29,18 @@ afterAll((done) => {
 });
 
 describe('pinMode', () => {
+  test('toBeFSAReply', () => {
+    const modeAction = pinModeActionBuilder(LED_BUILTIN, board.MODES.OUTPUT);
+
+    expect(makeReply(modeAction)).toBeFSAReply(modeAction);
+    expect(modeAction).not.toBeFSAReply(modeAction);
+  });
+
   test('valid mode', () => {
     const modeAction = pinModeActionBuilder(LED_BUILTIN, board.MODES.OUTPUT);
 
     expect(board.pins[LED_BUILTIN].mode).toBeUndefined();
-    expect(pinMode(board, modeAction)).toBe(modeAction);
+    expect(pinMode(board, modeAction)).toBeFSAReply(modeAction);
     expect(board.pins[LED_BUILTIN].mode).toBe(board.MODES.OUTPUT);
   });
 
@@ -40,15 +48,15 @@ describe('pinMode', () => {
     const modeAction = pinModeActionBuilder(999, board.MODES.OUTPUT);
 
     const response = pinMode(board, modeAction);
-    expect(response).toHaveProperty('error');
-    expect(response.error).toHaveProperty('code', ErrorCodes.BAD_PIN);
+    expect(response).toBeFSAReply(modeAction);
+    expect(response).toHaveErrorCode(ErrorCodes.BAD_PIN);
   });
 
   test('invalid mode', () => {
     const modeAction = pinModeActionBuilder(LED_BUILTIN, 999);
     const response = pinMode(board, modeAction);
-    expect(response).toHaveProperty('error');
-    expect(response.error).toHaveProperty('code', ErrorCodes.BAD_MODE);
+    expect(response).toBeFSAReply(modeAction);
+    expect(response).toHaveErrorCode(ErrorCodes.BAD_MODE);
   });
 });
 
@@ -59,7 +67,7 @@ describe('digitalWrite', () => {
 
     const writeHigh = digitalWriteActionBuilder(LED_BUILTIN, board.HIGH);
     expect(board.pins[LED_BUILTIN].value).toEqual(board.LOW);
-    expect(digitalWrite(board, writeHigh)).toBe(writeHigh);
+    expect(digitalWrite(board, writeHigh)).toBeFSAReply(writeHigh);
     expect(board.pins[LED_BUILTIN].value).toEqual(board.HIGH);
   });
 
@@ -69,7 +77,7 @@ describe('digitalWrite', () => {
 
     const writeLow = digitalWriteActionBuilder(LED_BUILTIN, board.LOW);
     expect(board.pins[LED_BUILTIN].value).toEqual(board.HIGH);
-    expect(digitalWrite(board, writeLow)).toBe(writeLow);
+    expect(digitalWrite(board, writeLow)).toBeFSAReply(writeLow);
     expect(board.pins[LED_BUILTIN].value).toEqual(board.LOW);
   });
 
@@ -79,8 +87,8 @@ describe('digitalWrite', () => {
 
     const writeHigh = digitalWriteActionBuilder(999, board.HIGH);
     const result = digitalWrite(board, writeHigh);
-    expect(result).toHaveProperty('error');
-    expect(result.error).toHaveProperty('code', ErrorCodes.BAD_PIN);
+    expect(result).toBeFSAReply(writeHigh);
+    expect(result).toHaveErrorCode(ErrorCodes.BAD_PIN);
   });
 
   test('bad value', () => {
@@ -89,8 +97,8 @@ describe('digitalWrite', () => {
 
     const writeHigh = digitalWriteActionBuilder(LED_BUILTIN, 999);
     const result = digitalWrite(board, writeHigh);
-    expect(result).toHaveProperty('error');
-    expect(result.error).toHaveProperty('code', ErrorCodes.BAD_OUTPUT);
+    expect(result).toBeFSAReply(writeHigh);
+    expect(result).toHaveErrorCode(ErrorCodes.BAD_OUTPUT);
   });
 
   test('blink', (done) => {
