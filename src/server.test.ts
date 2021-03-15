@@ -27,7 +27,7 @@ beforeAll(async () => {
 afterAll(stop);
 
 const buildUrl = (path: string): string =>
-  `http://localhost:${process.env.REACT_APP_HTTP_PORT}/${path}`;
+  `http://localhost:${process.env.HTTP_PORT}/${path}`;
 
 const postCommand: (action: FSA) => Promise<FSA> = (action) =>
   fetch(

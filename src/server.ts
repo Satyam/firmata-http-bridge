@@ -74,13 +74,13 @@ export function start() {
         });
       });
 
-      board = new Board(process.env.REACT_APP_USB_PORT);
+      board = new Board(process.env.USB_PORT);
 
       board.on('ready', () => {
         console.log('Arduino is ready to communicate');
-        http.listen(process.env.REACT_APP_HTTP_PORT, () => {
+        http.listen(process.env.HTTP_PORT, () => {
           console.log(
-            `Firmata bridge listening on port ${process.env.REACT_APP_HTTP_PORT}!`
+            `Firmata bridge listening on port ${process.env.HTTP_PORT}!`
           );
           resolve({ app, board, http });
         });

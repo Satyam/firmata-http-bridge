@@ -21,7 +21,7 @@ envRead();
 let board: Board;
 
 beforeAll((done) => {
-  board = new Board(process.env.REACT_APP_USB_PORT);
+  board = new Board(process.env.USB_PORT);
   board.on('ready', done);
 });
 
