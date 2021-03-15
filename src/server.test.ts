@@ -1,12 +1,13 @@
 import Board from 'firmata';
 import { config as envRead } from 'dotenv';
 import fetch from 'node-fetch';
+
+import './jest-setup.util';
 import { start, stop } from './server';
 import { FSA, ErrorCodes } from './types';
 import {
   pinModeActionBuilder,
   digitalWriteActionBuilder,
-  makeReply,
 } from './actionBuilders';
 
 const LED_BUILTIN = 13;
@@ -22,9 +23,12 @@ beforeAll(async () => {
 
 afterAll(stop);
 
+const buildUrl = (path: string): string =>
+  `http://localhost:${process.env.REACT_APP_HTTP_PORT}/${path}`;
+
 const postCommand: (action: FSA) => Promise<FSA> = (action) =>
   fetch(
-    `http://localhost:${process.env.REACT_APP_HTTP_PORT}/command`,
+    buildUrl('command'),
 
     {
       method: 'post',
@@ -34,6 +38,75 @@ const postCommand: (action: FSA) => Promise<FSA> = (action) =>
   ).then((res) => res.json());
 
 describe('server commands', () => {
+  describe('various gets', () => {
+    test('version', async () => {
+      const res = await fetch(buildUrl('version'));
+      expect(await res.json()).toMatchInlineSnapshot(`
+        Object {
+          "name": "StandardFirmata.ino",
+          "version": Object {
+            "major": 2,
+            "minor": 5,
+          },
+        }
+      `);
+    });
+    test('AnalogPins', async () => {
+      const res = await fetch(buildUrl('AnalogPins'));
+      expect(await res.json()).toMatchInlineSnapshot(`
+        Array [
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+        ]
+      `);
+    });
+    test('DigitalPins', async () => {
+      const res = await fetch(buildUrl('DigitalPins'));
+      expect(await res.json()).toMatchInlineSnapshot(`20`);
+    });
+    test('Single DigitalPins', async () => {
+      const res = await fetch(buildUrl('DigitalPins/1'));
+      expect(await res.json()).toMatchInlineSnapshot(`
+        Object {
+          "analogChannel": 127,
+          "report": 1,
+          "supportedModes": Array [],
+          "value": 0,
+        }
+      `);
+    });
+    test('Default index.html from public', async () => {
+      const res = await fetch(buildUrl(''));
+      expect(await res.text()).toMatchInlineSnapshot(`"<h1>Hello World!</h1>"`);
+    });
+    test('Some content from public', async () => {
+      const res = await fetch(buildUrl('something.txt'));
+      expect(await res.text()).toMatchInlineSnapshot(`
+        "Hello World!
+        "
+      `);
+    });
+    test('bad command', async () => {
+      const res = await postCommand({
+        type: 'nonsense',
+        payload: {},
+      });
+      expect(res).toMatchInlineSnapshot(`
+        Object {
+          "error": Object {
+            "code": 1,
+            "msg": "Invalid command",
+          },
+          "payload": Object {},
+          "type": "nonsense",
+        }
+      `);
+    });
+  });
   describe('pin mode', () => {
     test('pin mode', async () => {
       const action = pinModeActionBuilder(LED_BUILTIN, board.MODES.OUTPUT);

@@ -62,14 +62,14 @@ export function start() {
 
       app.get('/', (req, res) => {
         res.sendFile('index.html', {
-          root: path.resolve(__dirname, '../build'),
+          root: path.resolve(__dirname, '../public'),
           dotfiles: 'deny',
         });
       });
 
       app.get('*', (req, res) => {
         res.sendFile(req.path, {
-          root: path.resolve(__dirname, '../build'),
+          root: path.resolve(__dirname, '../public'),
           dotfiles: 'deny',
         });
       });
@@ -95,6 +95,7 @@ export function stop() {
     http.close();
     // @ts-ignore
     board.transport.close((error) => {
+      /* istanbul ignore if */
       if (error) reject(error);
       else resolve();
     });
