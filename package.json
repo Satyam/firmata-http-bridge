@@ -8,7 +8,9 @@
     "build": "tsc",
     "test": "jest -w=1",
     "coverage": "jest -w=1 --coverage",
-    "docs": "typedoc src/*.ts"
+    "docs": "typedoc src/*.ts",
+    "watch": "ts-node-dev --watch \"src/**/*.ts\" -- src/index.ts",
+    "inspect": "ts-node-dev --inspect -- src/index.ts"
   },
   "repository": {
     "type": "git",
