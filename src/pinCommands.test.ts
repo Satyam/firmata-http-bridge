@@ -1,16 +1,20 @@
 import Board from 'firmata';
 import { config as envRead } from 'dotenv';
 
-import { pinMode, digitalWrite } from './pinCommands';
+import { pinMode, digitalWrite, digitalRead } from './pinCommands';
 import './jest-setup.util';
 import {
   pinModeActionBuilder,
   digitalWriteActionBuilder,
+  digitalReadActionBuilder,
   makeReply,
 } from './actionBuilders';
 import { ErrorCodes } from './types';
 
 const LED_BUILTIN = 13;
+
+const BAD_PIN = 999;
+const BAD_MODE = 999;
 
 envRead();
 
@@ -45,7 +49,7 @@ describe('pinMode', () => {
   });
 
   test('invalid pin', () => {
-    const modeAction = pinModeActionBuilder(999, board.MODES.OUTPUT);
+    const modeAction = pinModeActionBuilder(BAD_PIN, board.MODES.OUTPUT);
 
     const response = pinMode(board, modeAction);
     expect(response).toBeFSAReply(modeAction);
@@ -53,7 +57,7 @@ describe('pinMode', () => {
   });
 
   test('invalid mode', () => {
-    const modeAction = pinModeActionBuilder(LED_BUILTIN, 999);
+    const modeAction = pinModeActionBuilder(LED_BUILTIN, BAD_MODE);
     const response = pinMode(board, modeAction);
     expect(response).toBeFSAReply(modeAction);
     expect(response).toHaveErrorCode(ErrorCodes.BAD_MODE);
@@ -85,7 +89,7 @@ describe('digitalWrite', () => {
     const modeAction = pinModeActionBuilder(LED_BUILTIN, board.MODES.OUTPUT);
     pinMode(board, modeAction);
 
-    const writeHigh = digitalWriteActionBuilder(999, board.HIGH);
+    const writeHigh = digitalWriteActionBuilder(BAD_PIN, board.HIGH);
     const result = digitalWrite(board, writeHigh);
     expect(result).toBeFSAReply(writeHigh);
     expect(result).toHaveErrorCode(ErrorCodes.BAD_PIN);
@@ -95,13 +99,13 @@ describe('digitalWrite', () => {
     const modeAction = pinModeActionBuilder(LED_BUILTIN, board.MODES.OUTPUT);
     pinMode(board, modeAction);
 
-    const writeHigh = digitalWriteActionBuilder(LED_BUILTIN, 999);
+    const writeHigh = digitalWriteActionBuilder(LED_BUILTIN, BAD_MODE);
     const result = digitalWrite(board, writeHigh);
     expect(result).toBeFSAReply(writeHigh);
     expect(result).toHaveErrorCode(ErrorCodes.BAD_OUTPUT);
   });
 
-  test('blink', (done) => {
+  test.skip('blink', (done) => {
     const modeAction = pinModeActionBuilder(LED_BUILTIN, board.MODES.OUTPUT);
     pinMode(board, modeAction);
     const writeLow = digitalWriteActionBuilder(LED_BUILTIN, board.LOW);
@@ -116,5 +120,25 @@ describe('digitalWrite', () => {
       );
     }
     setTimeout(done, 500 * i);
+  });
+});
+describe('digitalRead', () => {
+  test('read pin 2 with pullup', async () => {
+    const modeAction = pinModeActionBuilder(2, board.MODES.PULLUP);
+    pinMode(board, modeAction);
+
+    const readAction = digitalReadActionBuilder(2);
+    const res = await digitalRead(board, readAction);
+    expect(res).toBeFSAReply(readAction);
+    expect(res.payload.value).toBe(board.HIGH);
+  });
+  test('bad pin', async () => {
+    const modeAction = pinModeActionBuilder(2, board.MODES.PULLUP);
+    pinMode(board, modeAction);
+
+    const readAction = digitalReadActionBuilder(BAD_PIN);
+    const res = await digitalRead(board, readAction);
+    expect(res).toBeFSAReply(readAction);
+    expect(res).toHaveErrorCode(ErrorCodes.BAD_PIN);
   });
 });

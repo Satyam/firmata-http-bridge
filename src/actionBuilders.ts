@@ -34,6 +34,17 @@ export function digitalWriteActionBuilder(
   };
 }
 
+export type digitalReadFSA = FSA<'digitalRead', { pin: number }>;
+
+export function digitalReadActionBuilder(pin: number): digitalReadFSA {
+  return {
+    type: 'digitalRead',
+    payload: {
+      pin,
+    },
+  };
+}
+
 export function makeReply(request: FSA, extra: Omit<FSA, 'type'> = {}): FSA {
   return {
     type: `${request.type}_reply`,

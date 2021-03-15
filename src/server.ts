@@ -42,13 +42,13 @@ export function start() {
         }
       });
 
-      app.post('/command', function (req, res) {
+      app.post('/command', async function (req, res) {
         const action = req.body as FSA;
 
         const { type } = action;
 
         if (type in commands) {
-          res.json(commands[type](board, action));
+          res.json(await commands[type](board, action));
         } else {
           res.json({
             ...action,
