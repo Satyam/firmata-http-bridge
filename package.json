@@ -2,7 +2,7 @@
   "name": "firmata-http-bridge",
   "version": "1.0.0",
   "description": "Makes Firmata commands available through HTTP requests",
-  "main": "index.ts",
+  "main": "dist/index.js",
   "scripts": {
     "start": "ts-node-dev src/index.ts",
     "build": "tsc",
