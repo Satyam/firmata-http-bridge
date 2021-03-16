@@ -9,6 +9,30 @@ Currently it just reads and writes digital ports.
 
 This package installs a web server which accepts several commands and sends them through the Firmata protocol to a connected microcontroler, such as an Arduino board.
 
+- [firmata-http-bridge](#firmata-http-bridge)
+  - [Description](#description)
+  - [Installation](#installation)
+  - [Commands](#commands)
+    - [Install dependencies](#install-dependencies)
+    - [Compilation](#compilation)
+    - [Execute](#execute)
+    - [Compile, execute and watch](#compile-execute-and-watch)
+    - [Inspect](#inspect)
+    - [Test](#test)
+    - [Coverage](#coverage)
+    - [Documentation](#documentation)
+  - [Configuration](#configuration)
+    - [Settings](#settings)
+  - [API](#api)
+    - [Firmata Version](#firmata-version)
+    - [Analog Pins](#analog-pins)
+    - [Digital Pins](#digital-pins)
+    - [Public folder](#public-folder)
+    - [Commands](#commands-1)
+      - [pinMode](#pinmode)
+      - [digitalWrite](#digitalwrite)
+      - [digitalRead](#digitalread)
+
 ## Installation
 
 The package is not published to **npm** since it is not meant for production but to teach programming.  Thus, it is provided only as source code.
@@ -17,6 +41,7 @@ If you have [`git`](https://git-scm.com/) client installed, you can do:
 
 ```sh
 git clone https://github.com/Satyam/firmata-http-bridge.git
+cd firmata-http-bridge
 ```
 
 Otherwise you can download the ZIP file containing the code from: [https://github.com/Satyam/firmata-http-bridge/archive/main.zip](https://github.com/Satyam/firmata-http-bridge/archive/main.zip)
@@ -28,7 +53,7 @@ Once copied and/or expanded to a local drive, you must install dependencies and 
 
 This package expects [`NodeJS`](https://nodejs.org/) to be installed, which will also install [`npm`](https://www.npmjs.com/).
 
-All commands can be run within the directory where the package was installed.
+All commands can be run within the directory where the package was installed, by default `firmata-http-bridge`.
 
 Please check the [configuration options](#configuration) before executing.
 
@@ -55,8 +80,8 @@ This will result in a `dist/` folder to be created with the original TypeScript 
 
 It will contain three types of files:
 
-* `*.js`: Plain JavaScript executable files
-* `*.js.map`: Map files used in debugging to associate each line in the `*.js` files to the original source code in `*.ts` files. Debuggers handle this automatically.  They are not required in a production environment.
+* `*.js`: Plain JavaScript executable files.  These are the only ones needed in a production environment.
+* `*.js.map`: Map files used in debugging to associate each line in the `*.js` files to the original source code in the `*.ts` files. Debuggers handle this automatically.  They are not required in a production environment.
 * `*.d.ts`: type declaration files, they contain the type declarations extracted from the original `*.ts` without the actual code, which is now in the `*.js` files.  IDEs like VSCode use these files to provide code hints and type checking on the fly while using these files.
 
 ### Execute
@@ -67,23 +92,19 @@ Once installed and compiled, you may run the package in node with:
 node .
 ```
 
-### Compile and execute
+### Compile, execute and watch
 
-Somewhat slower, though mostly favoured when in development, is to compile and run all at once.  This way, you don't need to compile it first, but when in production, it will always incur in the cost of compiling everything all the time.
+The best option when in development, is to compile and run all at once.  It will then keep watching the source files to check for changes and, if there is one, it will re-compile and relaunch the app.
+
+This way, you don't need to compile it first, and it will keep the app running updated versions when you change the source files. 
+
+It is not recommended for production.
 
 ```
 npm start
 ```
 
-#### Watch 
-
-Also used in development, it automatically re-compiles and relaunches the app whenever any of the files in the `src` folder changes.  
-
-```
-npm run watch
-```
-
-#### Inspect
+### Inspect
 
 In development, it will compile and launch the application in debug mode.
 
@@ -91,7 +112,7 @@ In development, it will compile and launch the application in debug mode.
 npm run inspect
 ```
 
-Then, if using Google Chrome you can debug the app by going to the following URL:
+Then, if using Google Chrome, you can debug the app by going to the following URL:
 
 ```
 chrome://inspect
@@ -108,11 +129,11 @@ npm t
 
 Unit tests are meant to ensure that if you change the code, current behavior is maintained.  Tests should also be expanded to cover new features or added to uncover hidden bugs (usually to test unexpected behavior reported by end users).
 
-The tests current tests were written for an Arduino Uno board.  Many will fail if used with another board or if a board is not actually connected.  In this sense, they are *integration tests* rather than *unit tests* which would usually resort to *mocks* for Firmata instead of the real thing.
+The current tests were written for an Arduino Uno board.  Many will fail if used with another board or if a board is not actually connected.  In this sense, they are *integration tests* rather than *unit tests* which would usually resort to *mocks* for Firmata instead of the real thing.
 
 ### Coverage
 
-It measures how well the tests cover all the possibilities of the board.  100% coverage is the desired goal, though often unfeasible. At least all modules should reach a green level of coverage.  
+It measures how well the tests cover all the possibilities of the app.  100% coverage is the desired goal, though often unfeasible. At least all modules should reach a green level of coverage.  
 
 ```
 npm run coverage
@@ -131,19 +152,221 @@ A folder called `docs` will be created.  Open the file `docs/index.html` with an
 
 ## Configuration
 
-The program accepts several configuration parameters from the environment. All the parameters have defaults as documented below.  If you want to change any of them, you could do:
-In Linux:
+The program accepts several configuration parameters from the environment or the command prompt, the later overriding the former. All the parameters have defaults as documented below.  
+
+You can change the settings via the command line like this:
 
 ```
-HTTP_PORT=3000 npm start
+node . --HTTP_PORT=3000
+# or:
+npm start -- --HTTP_PORT=3000
 ```
-In Windows:
+Notice the double dash `--` before the options when using `npm start`.  That is because options issued before the `--` are for `npm` and those after are for the program `npm start` runs.
+
+You could also set environment variables by the same name.
+
+Configuration can be set via a file named `.env`  with the new settings.  A sample `.env` file might look like:
 ```
-set HTTP_PORT=3000 && npm start
+HTTP_PORT=3000
+USB_PORT=/dev/ttyACM1
 ```
 
-However it is much easier to create a file `.env` with the new settings.
+### Settings
 
 * `HTTP_PORT`: Defaults to 8000, sets the port to be used for the web server.
 * `USB_PORT`: Defaults to `/dev/ttyACM0` which is the standard port used by Firmata for Linux.  The correct value can be found by letting the Arduino IDE find it for you.
   
+## API
+
+All commands should be sent to `http://localhost:8000` if run from the same machine (*`localhost`*).  The port can be the default `8000` or whatever was [configured](#configuration).
+
+Some commands can be issued from the location bar on any browser. Those are listed below under the `GET` method. The only `POST` command can be only used programmatically.
+
+### Firmata Version
+
+`GET` on `http://localhost:8000/version` will return the version information of Firmata software running in the microcontroller board.  A typical response (on an Arduino with the most current version at the time or writing this) is:
+```
+{
+  "name": "StandardFirmata.ino",
+  "version": {
+    "major": 2,
+    "minor": 5,
+  },
+}
+```
+
+### Analog Pins
+
+`GET` on `http://localhost:8000/AnalogPins` will return an array with a list of pin numbers available for analog input.    A sample response might show: 
+```
+ [
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+]
+```
+This would mean, for example, that commands for the first available analog input port should go to physical pin 14.
+
+### Digital Pins
+
+`GET` on `http://localhost:8000/DigitalPins` will return the number of digital pins available.  A sample reply might show:
+```
+20
+```
+It means that the board supports digital pins from 1 to 20.  Further information can then be requested for each individual pin, but issuing the same command followed by a slash and a number, for example `http://localhost:8000/DigitalPins/10` for pin 10 might show:
+
+```
+{
+  "supportedModes":[0,1,3,4,11],
+  "value":0,
+  "mode":1,
+  "report":1,
+  "analogChannel":127
+}
+```
+The meaning of the `supportedModes` can be interpreted from this table:
+```
+  INPUT:    0,
+  OUTPUT:   1,
+  ANALOG:   2,
+  PWM:      3,
+  SERVO:    4,
+  SHIFT:    5,
+  I2C:      6,
+  ONEWIRE:  7,
+  STEPPER:  8,
+  SERIAL:  10
+  PULLUP:  11
+  IGNORE: 127
+  UNKOWN:  16
+```
+
+The current mode is shown under `mode`.  It will show nothing if not explicitly set.
+
+The `report` option is not currently supported so the value is not meaningful.
+
+### Public folder
+
+Any other request will return with the contents of the `public` folder.  Thus, the server can respond like a regular web server.  
+
+A request to `http://localhost:8000`  will return the file `public/index.html` if there is any.
+A request to `http://localhost:8000/someFile.txt`  will return the file `public/someFile.txt` if there is any.
+
+If no such file is found, it will return with a 404 -- Not Found error.
+
+### Commands
+
+There are two mechanism to send commands to the microcontroller, via a web browser or programmatically.
+
+The programmatic way, via the web [`Fetch API`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) will be covered elsewhere (*pending*)
+
+The following commands can be sent via the browser at the following URLs.
+
+#### pinMode
+
+A `GET` to `http://localhost:8000/pinMode/13/1` will set the pin 13 (the builtin led in the Arduino Uno board) to output mode.   The first value after `pinMode/` is the pin number and the second after the next slash is the mode that should be one of:
+
+```
+  INPUT:    0,
+  OUTPUT:   1,
+  ANALOG:   2,
+  PWM:      3,
+  SERVO:    4,
+  SHIFT:    5,
+  I2C:      6,
+  ONEWIRE:  7,
+  STEPPER:  8,
+  SERIAL:  10
+  PULLUP:  11
+  IGNORE: 127
+  UNKOWN:  16
+```
+Not all pins support all modes.  To find out which ones are valid, you may ask for `http://localhost:8000/digitalPins/13` and check the `supportedModes` values.
+
+The command will reply with:
+```json
+{
+  "type":"pinMode_reply",
+  "payload": {
+    "pin":13,
+    "mode":0
+  },
+  "meta": {
+    "date":"2021-03-16T17:08:01.041Z"
+  }
+}
+```
+
+If the URL has an invalid pin or mode, for example:  `http://localhost:8000/pinMode/999/1` the server would reply with an `error` property:
+
+```json
+{
+  "type":"pinMode_reply",
+  "payload": {
+    "pin":999,
+    "mode":1
+  },
+  "meta": {
+    "date":"2021-03-16T17:14:09.987Z"
+  },
+  "error": {
+    "code":2,
+    "msg":"Invalid pin"
+  }
+}
+```
+
+#### digitalWrite
+
+Once set to output mode via [`pinMode`](#pinmode), values can be set via a `GET` to `http://localhost:8000/digitalWrite/13/0` which would return:
+
+```json
+{
+  "type":"digitalWrite_reply",
+  "payload": {
+    "pin":13,
+    "output":0
+  },
+  "meta": {
+    "date":"2021-03-16T17:31:14.044Z"
+  }
+}
+```
+Or an error reply, similar to the one shown above.
+
+The `digitalWrite` command is followed by the pin number and the value, either `0` or `1`, all separated with slash `/`
+
+To blink the built-in led, the following sequence of requests can be send:
+
+```
+http://localhost:8000/pinMode/13/1
+http://localhost:8000/digitalWrite/13/0
+http://localhost:8000/digitalWrite/13/1
+http://localhost:8000/digitalWrite/13/0
+http://localhost:8000/digitalWrite/13/1
+```
+The first would set the pin for output and the following URLs will set the led on and off.
+
+#### digitalRead
+
+An input pin can be read via a `GET` to `http://localhost:8000/digitalRead/2` where the last value can be any of the digital pins.  
+
+After setting the [`pinMode`](#pinmode) for input with pull up with: `http://localhost:8000/pinMode/2/11`, assuming nothing is connected to that pin, the `http://localhost:8000/digitalRead/2`  would produce a reply such as:
+
+```json
+{
+  "type":"digitalRead_reply",
+  "payload":{
+    "pin":2,
+    "value":1
+  },
+  "meta": {
+    "date":"2021-03-16T17:45:48.305Z"
+  }
+}
+```
+
+
