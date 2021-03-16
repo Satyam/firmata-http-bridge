@@ -9,7 +9,6 @@
     "test": "jest -w=1",
     "coverage": "jest -w=1 --coverage",
     "docs": "typedoc src/*.ts",
-    "watch": "ts-node-dev --watch \"src/**/*.ts\" -- src/index.ts",
     "inspect": "ts-node-dev --inspect -- src/index.ts"
   },
   "repository": {
@@ -29,7 +28,8 @@
   "dependencies": {
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
-    "firmata": "^2.3.0"
+    "firmata": "^2.3.0",
+    "yargs": "^15.4.1"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.13.10",
@@ -38,6 +38,7 @@
     "@types/firmata": "^0.19.3",
     "@types/jest": "^26.0.20",
     "@types/node-fetch": "^2.5.8",
+    "@types/yargs": "^15.0.13",
     "jest": "^26.6.3",
     "node-fetch": "^2.6.1",
     "prettier": "^2.2.1",

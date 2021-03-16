@@ -1,8 +1,8 @@
 import Board from 'firmata';
-import { config as envRead } from 'dotenv';
 
-import { pinMode, digitalWrite, digitalRead } from './pinCommands';
 import './jest-setup.util';
+import config from './config';
+import { pinMode, digitalWrite, digitalRead } from './pinCommands';
 import {
   pinModeActionBuilder,
   digitalWriteActionBuilder,
@@ -16,12 +16,10 @@ const LED_BUILTIN = 13;
 const BAD_PIN = 999;
 const BAD_MODE = 999;
 
-envRead();
-
 let board: Board;
 
 beforeAll((done) => {
-  board = new Board(process.env.USB_PORT);
+  board = new Board(config.USB_PORT);
   board.on('ready', done);
 });
 

@@ -1,8 +1,8 @@
 import Board from 'firmata';
-import { config as envRead } from 'dotenv';
 import fetch from 'node-fetch';
 
 import './jest-setup.util';
+import config from './config';
 import { start, stop } from './server';
 import { FSA, ErrorCodes } from './types';
 import {
@@ -15,7 +15,6 @@ const LED_BUILTIN = 13;
 
 const BAD_PIN = 999;
 const BAD_MODE = 999;
-envRead();
 
 let board: Board;
 
@@ -27,7 +26,7 @@ beforeAll(async () => {
 afterAll(stop);
 
 const buildUrl = (path: string): string =>
-  `http://localhost:${process.env.HTTP_PORT}/${path}`;
+  `http://localhost:${config.HTTP_PORT}/${path}`;
 
 const postCommand: (action: FSA) => Promise<FSA> = (action) =>
   fetch(
@@ -92,6 +91,10 @@ describe('server commands', () => {
         "Hello World!
         "
       `);
+    });
+    test('Non-existing content', async () => {
+      const res = await fetch(buildUrl('nosuchfile.txt'));
+      expect(res.status).toBe(404);
     });
     test('bad command', async () => {
       const res = await postCommand({
