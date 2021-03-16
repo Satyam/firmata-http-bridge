@@ -1,19 +1,23 @@
 import express, { Express } from 'express';
 import { createServer, Server } from 'http';
 import path from 'path';
-import { config as envRead } from 'dotenv';
 
 // https://github.com/firmata/firmata.js/tree/master/packages/firmata.js
 import Board from 'firmata';
 
 import { FSA, Commands, ErrorCodes } from './types';
 import * as pinCmds from './pinCommands';
+import config from './config';
+import {
+  digitalReadActionBuilder,
+  digitalWriteActionBuilder,
+  pinModeActionBuilder,
+} from './actionBuilders';
 
 const commands: Record<string, Commands> = {
   ...pinCmds,
 };
 
-envRead();
 let http: Server;
 let board: Board;
 
@@ -60,6 +64,37 @@ export function start() {
         }
       });
 
+      app.get('/pinMode/:pin/:mode', async function (req, res) {
+        res.json(
+          await commands.pinMode(
+            board,
+            pinModeActionBuilder(
+              parseInt(req.params.pin, 10),
+              parseInt(req.params.mode, 10)
+            )
+          )
+        );
+      });
+      app.get('/digitalWrite/:pin/:output', async function (req, res) {
+        res.json(
+          await commands.digitalWrite(
+            board,
+            digitalWriteActionBuilder(
+              parseInt(req.params.pin, 10),
+              parseInt(req.params.output, 10)
+            )
+          )
+        );
+      });
+      app.get('/digitalRead/:pin', async function (req, res) {
+        res.json(
+          await commands.digitalRead(
+            board,
+            digitalReadActionBuilder(parseInt(req.params.pin, 10))
+          )
+        );
+      });
+
       app.get('/', (req, res) => {
         res.sendFile('index.html', {
           root: path.resolve(__dirname, '../public'),
@@ -74,14 +109,12 @@ export function start() {
         });
       });
 
-      board = new Board(process.env.USB_PORT);
+      board = new Board(config.USB_PORT);
 
       board.on('ready', () => {
-        console.log('Arduino is ready to communicate');
-        http.listen(process.env.HTTP_PORT, () => {
-          console.log(
-            `Firmata bridge listening on port ${process.env.HTTP_PORT}!`
-          );
+        console.log(`Arduino at ${config.USB_PORT} is ready to communicate`);
+        http.listen(config.HTTP_PORT, () => {
+          console.log(`Firmata bridge listening on port ${config.HTTP_PORT}!`);
           resolve({ app, board, http });
         });
       });
