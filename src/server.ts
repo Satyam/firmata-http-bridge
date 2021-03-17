@@ -20,7 +20,15 @@ const commands: Record<string, Commands> = {
 
 let http: Server;
 let board: Board;
-
+/**
+ * Starts the server by
+ * * Opening the board specified in the
+ *   `USB_PORT` command line option or environment variable.
+ * * Launching a web server listening on the port specified in the
+ *   `USB_PORT` command line option or environment variable.
+ * @export
+ * @return {Promise} A promise resolved to an object containing the instances created
+ */
 export function start() {
   return new Promise<{ board: Board; http: Server; app: Express }>(
     (resolve, reject) => {
@@ -123,7 +131,12 @@ export function start() {
     }
   );
 }
-
+/**
+ * Stops the server and closes the communication with the board
+ *
+ * @export
+ * @return {Promise} An empty Promise when both are closed.
+ */
 export function stop() {
   return new Promise<void>((resolve, reject) => {
     console.log('Server closing');

@@ -1,3 +1,7 @@
+/**
+ * Functions to send the FSA commands to the board
+ * @module
+ */
 import { validDigitalPin, validMode, validOutput } from './utils';
 import { FSA, Commands, ErrorCodes } from './types';
 import type {
@@ -7,6 +11,16 @@ import type {
 } from './actionBuilders';
 import { makeReply } from './actionBuilders';
 
+/**
+ * Sends the `pinModeFSA` action type to the given board.
+ * It is best to use [[pinModeActionBuilder]] to build the action
+ *
+ * This function returns immediately (not a Promise)
+ * @exports
+ * @param board - Board to send the command to
+ * @param action - FSA action to send
+ * @returns {FSA} A reply FSA
+ */
 export const pinMode: Commands<pinModeFSA> = (board, action) => {
   const {
     payload: { pin, mode },
@@ -34,6 +48,16 @@ export const pinMode: Commands<pinModeFSA> = (board, action) => {
   return makeReply(action);
 };
 
+/**
+ * Sends the `digitalWriteFSA` action type to the given board.
+ * It is best to use [[digitalWriteActionBuilder]] to build the action
+ *
+ * This function returns immediately (not a Promise)
+ * @exports
+ * @param board - Board to send the command to
+ * @param action - FSA action to send
+ * @returns {FSA} A reply FSA
+ */
 export const digitalWrite: Commands<digitalWriteFSA> = (board, action) => {
   const {
     payload: { pin, output },
@@ -61,6 +85,17 @@ export const digitalWrite: Commands<digitalWriteFSA> = (board, action) => {
   return makeReply(action);
 };
 
+/**
+ * Sends the `digitalReadFSA` action type to the given board.
+ * It is best to use [[digitalReadActionBuilder]] to build the action
+ *
+ * This function returns a `Promise` resolved to a reply FSA.
+ * If an error is detected if will immediately return an error FSA.
+ * @exports
+ * @param board - Board to send the command to
+ * @param action - FSA action to send
+ * @returns {FSA} A reply FSA
+ */
 export const digitalRead: Commands<digitalReadFSA> = (board, action) => {
   const {
     payload: { pin },
