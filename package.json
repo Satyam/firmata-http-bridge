@@ -9,7 +9,7 @@
     "test": "jest -w=1",
     "coverage": "jest -w=1 --coverage",
     "docs": "typedoc src/*.ts",
-    "inspect": "ts-node-dev --inspect -- src/index.ts"
+    "inspect": "ts-node-dev --inspect-brk -- src/index.ts"
   },
   "repository": {
     "type": "git",
