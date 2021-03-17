@@ -29,6 +29,7 @@ This package installs a web server which accepts several commands and sends them
     - [Digital Pins](#digital-pins)
     - [Public folder](#public-folder)
     - [Commands](#commands-1)
+      - [FSA](#fsa)
       - [pinMode](#pinmode)
       - [digitalWrite](#digitalwrite)
       - [digitalRead](#digitalread)
@@ -263,7 +264,25 @@ There are two mechanism to send commands to the microcontroller, via a web brows
 
 The programmatic way, via the web [`Fetch API`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) will be covered elsewhere (*pending*)
 
-The following commands can be sent via the browser at the following URLs.
+The commands below can be sent via the browser at the indicated URLs.
+
+All the commands are internally sent as a [Flux Standard Action](https://github.com/redux-utilities/flux-standard-action#flux-standard-action) or **FSA** and so are the possible replies.
+
+#### FSA
+
+FSA is a message format to transmit *actions* to be performed.  The Firmata protocol uses MIDI because it is very compact and thus suitable for devices with very little processing resources.  However, in the web environment, both clients and servers have plenty of resources and the transmission networks have high bandwidth, thus, a more verbose protocol, much easier to produce and read, is preferred which is much less prone to errors and easier to debug.
+
+The FSA is a JavaScript object containing the following properties:
+
+* `type`: a string specifying the action requested or replied to.  This is the only mandatory field.
+* `payload`: an object containing the parameters required for the requested action, as properties.
+* `meta`: additional information not directly related to the action
+* `error`: an object containing a numerical `code` and a human readable `msg`.
+  
+The actual standard is somewhat lax in what the last three, optional, properties might be.  They can all be simple values (for example, if the action requires just one parameter, the `payload` might contain its value instead of an object with a property containing its value).  The format presented above is the one we adopted for this app.
+
+Being a JavaScript object, an FSA is easy to transmit as a JSON string both for commands and replies.
+
 
 #### pinMode
 
@@ -286,7 +305,20 @@ A `GET` to `http://localhost:8000/pinMode/13/1` will set the pin 13 (the builtin
 ```
 Not all pins support all modes.  To find out which ones are valid, you may ask for `http://localhost:8000/digitalPins/13` and check the `supportedModes` values.
 
-The command will reply with:
+The URL is translated internally to the following FSA:
+
+```json
+{
+  "type":"pinMode",
+  "payload": {
+    "pin":13,
+    "mode":0
+  }
+}
+```
+
+And it would be answered with the following reply:
+
 ```json
 {
   "type":"pinMode_reply",
@@ -300,11 +332,13 @@ The command will reply with:
 }
 ```
 
-If the URL has an invalid pin or mode, for example:  `http://localhost:8000/pinMode/999/1` the server would reply with an `error` property:
+The `type` property has now a suffix of `_reply` and a `meta.date` property has been added with the ISO 8601 date when the command was executed, possibly for logging purposes or whatever.
+
+If the URL has an invalid pin or mode, for example:  `http://localhost:8000/pinMode/999/1` the server would reply with a type suffix of `_error` and an `error` property:
 
 ```json
 {
-  "type":"pinMode_reply",
+  "type":"pinMode_error",
   "payload": {
     "pin":999,
     "mode":1
