@@ -18,12 +18,18 @@ const BAD_MODE = 999;
 
 let board: Board;
 
-beforeAll(async () => {
-  const props = await start();
-  board = props.board;
-});
+beforeAll(() =>
+  start()
+    .then((props) => {
+      board = props.board;
+    })
+    .catch(() => {
+      // If it fails here it probably means the board is not connected or powered
+      process.exit(1);
+    })
+);
 
-afterAll(stop);
+afterAll(() => board && stop());
 
 const buildUrl = (path: string): string =>
   `http://localhost:${config.HTTP_PORT}/${path}`;

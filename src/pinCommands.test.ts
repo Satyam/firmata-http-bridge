@@ -21,6 +21,10 @@ let board: Board;
 beforeAll((done) => {
   board = new Board(config.USB_PORT);
   board.on('ready', done);
+  board.on('error', () => {
+    // If it fails here it probably means the board is not connected or powered
+    process.exit(1);
+  });
 });
 
 afterEach(() => board.reset());

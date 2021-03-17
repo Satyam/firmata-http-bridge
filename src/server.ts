@@ -23,7 +23,7 @@ let board: Board;
 
 export function start() {
   return new Promise<{ board: Board; http: Server; app: Express }>(
-    (resolve) => {
+    (resolve, reject) => {
       const app = express();
       http = createServer(app);
 
@@ -118,6 +118,8 @@ export function start() {
           resolve({ app, board, http });
         });
       });
+
+      board.on('error', reject);
     }
   );
 }

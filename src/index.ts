@@ -1,3 +1,5 @@
 import { start } from './server';
 
-start();
+start().catch((err) => {
+  console.error(err);
+});
