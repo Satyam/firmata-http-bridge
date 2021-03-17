@@ -30,17 +30,27 @@ if (jestExpect !== undefined) {
         }) +
         '\n\nreceived:\n' +
         this.utils.printReceived(received);
-      return type === expectedType + '_reply' &&
+
+      let pass = true;
+      pass =
+        pass &&
         typeof meta === 'object' &&
         toISOStringRegex.test(meta.date) &&
         Object.keys(expectedPayload).every(
           (name) => expectedPayload[name] === payload[name]
-        ) &&
-        (typeof error === 'undefined'
-          ? true
-          : typeof error === 'object' &&
-            error.code in Object.keys(ErrorCodes) &&
-            typeof error.msg === 'string')
+        );
+      if (type === `${expectedType}_reply`) {
+      } else if (type === `${expectedType}_error`) {
+        pass =
+          pass &&
+          typeof error === 'object' &&
+          error.code in Object.keys(ErrorCodes) &&
+          typeof error.msg === 'string';
+      } else {
+        pass = false;
+      }
+
+      return pass
         ? {
             message: () =>
               `expected(received).not.toBeFSAReply(expected)\n\nnot expected:\n ${msg}`,

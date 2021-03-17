@@ -45,18 +45,32 @@ export function digitalReadActionBuilder(pin: number): digitalReadFSA {
   };
 }
 
-export function makeReply(request: FSA, extra: Omit<FSA, 'type'> = {}): FSA {
-  return {
-    type: `${request.type}_reply`,
-    payload: {
-      ...request.payload,
-      ...(extra.payload || {}),
-    },
-    meta: {
-      ...request.meta,
-      ...(extra.meta || {}),
-      date: new Date().toISOString(),
-    },
-    error: extra.error,
+export function makeReply(
+  { type: rt, payload: rp, meta: rm }: FSA,
+  { payload: xp, meta: xm, error }: Omit<FSA, 'type'> = {}
+): FSA {
+  const type = `${rt}_${error ? 'error' : 'reply'}`;
+  const payload = xp
+    ? {
+        ...rp,
+        ...xp,
+      }
+    : rp;
+  const meta = {
+    ...rm,
+    ...xm,
+    date: new Date().toISOString(),
   };
+  return error
+    ? {
+        type,
+        payload,
+        meta,
+        error,
+      }
+    : {
+        type,
+        payload,
+        meta,
+      };
 }
