@@ -5,7 +5,9 @@
   "main": "dist/index.js",
   "scripts": {
     "start": "ts-node-dev src/index.ts",
-    "build": "tsc",
+    "build:server": "tsc",
+    "build:public": "tsc --project tsconfig.public.json",
+    "build": "npm run build:server && npm run build:public",
     "test": "jest -w=1",
     "coverage": "jest -w=1 --coverage",
     "docs": "typedoc src/*.ts",
