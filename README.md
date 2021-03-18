@@ -253,10 +253,14 @@ The `report` option is not currently supported so the value is not meaningful.
 
 Any other request will return with the contents of the `public` folder.  Thus, the server can respond like a regular web server.  
 
-A request to `http://localhost:8000`  will return the file `public/index.html` if there is any.
+A request to `http://localhost:8000`  will return the file `public/index.html` which contains an example of remote access.
 A request to `http://localhost:8000/someFile.txt`  will return the file `public/someFile.txt` if there is any.
 
 If no such file is found, it will return with a 404 -- Not Found error.
+
+The existing `public/index.html` provides a means to try out the commands.  It contains one framed section for each of the commands, inputs for the parameters for each call and a `Send` button to send the command to the same server, which will act upon the microcontroller.  The reply will be shown on the right.
+
+Before reading or writing to any of the ports, remember to set the correct mode for the command.
 
 ### Commands
 
