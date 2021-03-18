@@ -89,7 +89,9 @@ describe('server commands', () => {
     });
     test('Default index.html from public', async () => {
       const res = await fetch(buildUrl(''));
-      expect(await res.text()).toMatchInlineSnapshot(`"<h1>Hello World!</h1>"`);
+      expect(res.status).toBe(200);
+      expect(res.headers.get('content-type')).toMatch(/^text\/html/);
+      expect(parseInt(res.headers.get('content-length'))).toBeGreaterThan(0);
     });
     test('Some content from public', async () => {
       const res = await fetch(buildUrl('something.txt'));
