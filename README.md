@@ -85,6 +85,8 @@ It will contain three types of files:
 * `*.js.map`: Map files used in debugging to associate each line in the `*.js` files to the original source code in the `*.ts` files. Debuggers handle this automatically.  They are not required in a production environment.
 * `*.d.ts`: type declaration files, they contain the type declarations extracted from the original `*.ts` without the actual code, which is now in the `*.js` files.  IDEs like VSCode use these files to provide code hints and type checking on the fly while using these files.
 
+It will also add a few files to the `public/` folder, which are the non-TypeScript versions of their namesakes, with a `.js` extension instead of the `.ts` extension of TypeScript files.  If the original files feel cumbersome, these two are plain JavaScript.  There will also be files with `.d.ts` extensions where all the type declarations get extracted.
+
 ### Execute
 
 Once installed and compiled, you may run the package in node with:
@@ -113,11 +115,12 @@ In development, it will compile and launch the application in debug mode.
 npm run inspect
 ```
 
-Then, if using Google Chrome, you can debug the app by going to the following URL:
+It will automatically stop at a breakpoint before the first executable line to give you enough time to start the debugging client, such as Google Chrome which you can use to debug the app by going to the following URL:
 
 ```
 chrome://inspect
 ```
+
 It is a good idea to place `debugger` statements in the source `*.ts` files close to the places you want to inspect.
 
 ### Test
@@ -141,6 +144,7 @@ npm run coverage
 ```
 
 To know what parts of the code are not covered by the tests, once the command is run, a folder `coverage` is created.  You can browse the `index.html` file which will show each of the files tested and highlight in color the parts that have never been tested. This allows for further tests to be added to cover those cases.
+
 ### Documentation
 
 API documentation can be produced automatically by running:
@@ -150,6 +154,12 @@ npm run docs
 ```
 
 A folder called `docs` will be created.  Open the file `docs/index.html` with any browser and it will provide the documentation for this package.
+
+Documentation comments (usually called *doc comments*) can be found in the source files, they are the comments started with `/**`.
+
+Keeping the documentation updated in parallel with the code has always been an issue. The idea is that, if you can generate part of the documentation from the code itself, making the documentation is much easier. By adding a few doc comments along the code, it is easier to update the docs when and if you update the code. The words starting with an `@` are keywords, whose meaning can be found in the [JsDoc](https://jsdoc.app/) documentation, which became the most popular such API documentation generator, but does not deal with TypeScript.  That is why I used [TypeDoc](https://typedoc.org/).
+
+Documentation generators don't always get it right.  They get a lot of information from the TypeScript types but sometimes they get confused but, overall, they do a good job.
 
 ## Configuration
 
@@ -266,7 +276,7 @@ Before reading or writing to any of the ports, remember to set the correct mode 
 
 There are two mechanism to send commands to the microcontroller, via a web browser or programmatically.
 
-The programmatic way, via the web [`Fetch API`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) will be covered elsewhere (*pending*)
+The programmatic way, via the web [`Fetch API`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) will be covered elsewhere (*pending*).  The `public/index.html` file can serve as an example of this.
 
 The commands below can be sent via the browser at the indicated URLs.
 
