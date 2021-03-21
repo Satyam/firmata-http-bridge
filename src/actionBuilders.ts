@@ -4,7 +4,7 @@
  * @module
  */
 import Board from 'firmata';
-import { FSA } from './types';
+import { FSA } from './types.js';
 
 /**
  *  Describes the FSA for the `pinMode` command

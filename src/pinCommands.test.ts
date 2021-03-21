@@ -1,15 +1,15 @@
 import Board from 'firmata';
 
 import './jest-setup.util';
-import config from './config';
-import { pinMode, digitalWrite, digitalRead } from './pinCommands';
+import config from './config.js';
+import { pinMode, digitalWrite, digitalRead } from './pinCommands.js';
 import {
   pinModeActionBuilder,
   digitalWriteActionBuilder,
   digitalReadActionBuilder,
   makeReply,
-} from './actionBuilders';
-import { ErrorCodes } from './types';
+} from './actionBuilders.js';
+import { ErrorCodes } from './types.js';
 
 const LED_BUILTIN = 13;
 

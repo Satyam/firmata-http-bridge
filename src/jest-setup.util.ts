@@ -1,12 +1,12 @@
 /// <reference types="jest" />
-import { ErrorCodes, FSA } from './types';
+import { ErrorCodes, FSA } from './types.js';
 
 declare global {
   namespace jest {
     // noinspection JSUnusedGlobalSymbols
     interface Matchers<R> {
       toBeFSAReply(expected: FSA): R;
-      toHaveErrorCode(expected: ErrorCodes);
+      toHaveErrorCode(expected: ErrorCodes): R;
     }
   }
 }

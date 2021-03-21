@@ -5,131 +5,81 @@ import path from 'path';
 // https://github.com/firmata/firmata.js/tree/master/packages/firmata.js
 import Board from 'firmata';
 
-import { FSA, Commands, ErrorCodes } from './types';
-import * as pinCmds from './pinCommands';
-import config from './config';
-import {
-  digitalReadActionBuilder,
-  digitalWriteActionBuilder,
-  pinModeActionBuilder,
-} from './actionBuilders';
+import config from './config.js';
 
-const commands: Record<string, Commands> = {
-  ...pinCmds,
+import setupSimple from './simple/index.js';
+import setupPost from './post/index.js';
+import setupSockets from './sockets/index.js';
+
+// @ts-ignore
+import * as dn from './expose__dirname.cjs';
+
+export type SetupType = {
+  app: Express;
+  http: Server;
+  board: Board;
 };
 
 let http: Server;
 let board: Board;
+
+function pathResolve(relPath: string): string {
+  // const dirname = __dirname || dn.__dirname;
+  return path.resolve(dn.__dirname, relPath);
+}
 /**
  * Starts the server by
  * * Opening the board specified in the
  *   `USB_PORT` command line option or environment variable.
  * * Launching a web server listening on the port specified in the
- *   `USB_PORT` command line option or environment variable.
+ *   `HTTP_PORT` command line option or environment variable.
  * @export
- * @return {Promise} A promise resolved to an object containing the instances created
+ * @return {Promise} A promise returning nothing
  */
-export function start() {
-  return new Promise<{ board: Board; http: Server; app: Express }>(
-    (resolve, reject) => {
-      const app = express();
-      http = createServer(app);
+export function start(): Promise<SetupType> {
+  return new Promise<SetupType>((resolve, reject) => {
+    // initialize global variables
+    const app = express();
+    http = createServer(app);
+    board = new Board(config.USB_PORT);
 
-      app.use(express.json());
+    board.on('error', reject);
 
-      app.get('/version', (req, res) => {
-        res.json(board.firmware);
+    app.use(express.json());
+
+    setupSimple({ app, http, board });
+    setupPost({ app, http, board });
+    setupSockets({ app, http, board });
+
+    app.get('/dist/*', (req, res) => {
+      res.sendFile(req.path.replace(/\/dist\//, '/'), {
+        root: pathResolve('../dist'),
+        dotfiles: 'deny',
       });
+    });
 
-      app.get('/AnalogPins', (req, res) => {
-        res.json(board.analogPins);
+    app.get('/', (req, res) => {
+      res.sendFile('index.html', {
+        root: pathResolve('../public'),
+        dotfiles: 'deny',
       });
+    });
 
-      app.get('/DigitalPins/:pin?', (req, res) => {
-        const pins = board.pins;
-        if (req.params.pin) {
-          res.json(pins[parseInt(req.params.pin, 10)]);
-        } else {
-          res.json(pins.length);
-        }
+    app.get('*', (req, res) => {
+      res.sendFile(req.path, {
+        root: pathResolve('../public'),
+        dotfiles: 'deny',
       });
+    });
 
-      app.post('/command', async function (req, res) {
-        const action = req.body as FSA;
-
-        const { type } = action;
-
-        if (type in commands) {
-          res.json(await commands[type](board, action));
-        } else {
-          res.json({
-            ...action,
-            error: {
-              code: ErrorCodes.BAD_ACTION_TYPE,
-              msg: 'Invalid command',
-            },
-          });
-        }
+    board.on('ready', () => {
+      console.log(`Arduino at ${config.USB_PORT} is ready to communicate`);
+      http.listen(config.HTTP_PORT, () => {
+        console.log(`Firmata bridge listening on port ${config.HTTP_PORT}!`);
+        resolve({ app, http, board });
       });
-
-      app.get('/pinMode/:pin/:mode', async function (req, res) {
-        res.json(
-          await commands.pinMode(
-            board,
-            pinModeActionBuilder(
-              parseInt(req.params.pin, 10),
-              parseInt(req.params.mode, 10)
-            )
-          )
-        );
-      });
-      app.get('/digitalWrite/:pin/:output', async function (req, res) {
-        res.json(
-          await commands.digitalWrite(
-            board,
-            digitalWriteActionBuilder(
-              parseInt(req.params.pin, 10),
-              parseInt(req.params.output, 10)
-            )
-          )
-        );
-      });
-      app.get('/digitalRead/:pin', async function (req, res) {
-        res.json(
-          await commands.digitalRead(
-            board,
-            digitalReadActionBuilder(parseInt(req.params.pin, 10))
-          )
-        );
-      });
-
-      app.get('/', (req, res) => {
-        res.sendFile('index.html', {
-          root: path.resolve(__dirname, '../public'),
-          dotfiles: 'deny',
-        });
-      });
-
-      app.get('*', (req, res) => {
-        res.sendFile(req.path, {
-          root: path.resolve(__dirname, '../public'),
-          dotfiles: 'deny',
-        });
-      });
-
-      board = new Board(config.USB_PORT);
-
-      board.on('ready', () => {
-        console.log(`Arduino at ${config.USB_PORT} is ready to communicate`);
-        http.listen(config.HTTP_PORT, () => {
-          console.log(`Firmata bridge listening on port ${config.HTTP_PORT}!`);
-          resolve({ app, board, http });
-        });
-      });
-
-      board.on('error', reject);
-    }
-  );
+    });
+  });
 }
 /**
  * Stops the server and closes the communication with the board
@@ -137,15 +87,17 @@ export function start() {
  * @export
  * @return {Promise} An empty Promise when both are closed.
  */
-export function stop() {
+export function stop(): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     console.log('Server closing');
     http.close();
-    // @ts-ignore
-    board.transport.close((error) => {
-      /* istanbul ignore if */
-      if (error) reject(error);
-      else resolve();
-    });
+    if (board) {
+      // @ts-ignore
+      board.transport.close((error) => {
+        /* istanbul ignore if */
+        if (error) reject(error);
+        else resolve();
+      });
+    } else resolve();
   });
 }

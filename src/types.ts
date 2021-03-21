@@ -1,4 +1,6 @@
 import Board from 'firmata';
+import type { Express } from 'express';
+import type { Server } from 'http';
 /* *
  * Enumeration of the possible error codes.
  *
@@ -39,3 +41,9 @@ export type Commands<F extends FSA = FSA, Meta = any> = (
   board: Board,
   action: F
 ) => FSA | Promise<FSA>;
+
+export type SetupType = {
+  app: Express;
+  http: Server;
+  board: Board;
+};

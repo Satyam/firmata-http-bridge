@@ -2,14 +2,27 @@
  * Functions to send the FSA commands to the board
  * @module
  */
-import { validDigitalPin, validMode, validOutput } from './utils';
-import { FSA, Commands, ErrorCodes } from './types';
+import { validDigitalPin, validMode, validOutput } from './utils.js';
+import type Board from 'firmata';
+
 import type {
   digitalWriteFSA,
   pinModeFSA,
   digitalReadFSA,
-} from './actionBuilders';
-import { makeReply } from './actionBuilders';
+} from './actionBuilders.js';
+
+import { FSA, ErrorCodes } from './types.js';
+import { makeReply } from './actionBuilders.js';
+
+/**
+ * Describes the format of the commands dispatched from the web server.
+ * @typeParam F the shape of the FSA used in this command
+ * @typeParam Meta the shape of extra `meta` properties
+ */
+export type Commands<F extends FSA = FSA, Meta = any> = (
+  board: Board,
+  action: F
+) => FSA | Promise<FSA>;
 
 /**
  * Sends the `pinModeFSA` action type to the given board.
