@@ -58,6 +58,18 @@ export function start(): Promise<SetupType> {
       });
     });
 
+    app.get('/docs/*', (req, res) => {
+      res.sendFile(req.path.replace(/\/docs\//, '/'), {
+        root: pathResolve('../docs'),
+        dotfiles: 'deny',
+      });
+    });
+    app.get('/coverage/*', (req, res) => {
+      res.sendFile(req.path.replace(/\/coverage\//, '/'), {
+        root: pathResolve('../coverage'),
+        dotfiles: 'deny',
+      });
+    });
     app.get('/', (req, res) => {
       res.sendFile('index.html', {
         root: pathResolve('../public'),

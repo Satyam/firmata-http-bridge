@@ -1,0 +1,91 @@
+<html>
+  <head>
+    <link rel="icon" href="/favicon.svg" />
+    <style>
+      code,
+      blockquote {
+        background-color: silver;
+        padding: 0 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <fieldset>
+      <legend>Simple commands</legend>
+      <p>Click on any of the following commands to see the results.</p>
+      <p>
+        Click on the <i>back</i> arrow <b>&loarr;</b> in the top-left of the
+        browser to return here.
+      </p>
+      <p>
+        These are simply sample commands. You can try changing the URL in the
+        navigation bar of the browser once you have issued the command via one
+        of the commands below. For example:
+      </p>
+      <blockquote>
+        After clicking on the
+        <code>http://localhost:8000/digitalPins/2</code> link below, you might
+        want to change it in the navigation bar to
+        <code>http://localhost:8000/digitalPins/3</code>
+        or any other pin number at the end.
+      </blockquote>
+
+      <ul>
+        <li>Various status</li>
+        <ul>
+          <li><a href="/version">Firmware version</a></li>
+          <li><a href="/digitalPins">Get the number of digital pins</a></li>
+          <li><a href="/digitalPins/2">Get status of digital pin 2</a></li>
+          <li><a href="/analogPins">Get analog pins conversion table</a></li>
+        </ul>
+        <li>Read pin 2</li>
+        <ul>
+          <li>
+            <a href="/pinMode/2/11">Set pin 2 to input with pull-up.</a>
+            <b>Must do this first</b>
+          </li>
+          <li><a href="/digitalRead/2">Read pin 2</a></li>
+        </ul>
+        <li>Write to LED_BUILD (pin 13 on Arduino 1)</li>
+        <ul>
+          <li>
+            <a href="/pinmode/13/1">Set LED_BUILTIN to OUTPUT</a>
+            <b>Must do this first</b>
+          </li>
+          <li><a href="/digitalWrite/13/1">Turn LED_BULTIN on</a></li>
+          <li><a href="/digitalWrite/13/0">Turn LED_BULTIN off</a></li>
+        </ul>
+        <li>Sample error</li>
+        <ul>
+          <li><a href="/pinMode/999/0">Bad pin</a></li>
+        </ul>
+      </ul>
+    </fieldset>
+    <fieldset>
+      <legend>Other ways to access the board</legend>
+      <p>
+        Access via HTTP method POST using FSA: <a href="/post.html">via post</a>
+      </p>
+      <p>
+        Access via Sockets using FSA: <a href="/sockets.html">via sockets</a>
+      </p>
+    </fieldset>
+    <fieldset>
+      <legend>Extras</legend>
+      <p>
+        These commands work only if you run the given commands from the command
+        line in the app folder.
+      </p>
+      <ul>
+        <li>
+          After you have done <code>npm run docs</code>:
+          <a href="/docs/">Docs</a>
+        </li>
+        <li>
+          After you have done <code>npm run coverage</code>:
+          <a href="/coverage/">Coverage</a>
+        </li>
+      </ul>
+    </fieldset>
+  </body>
+</html>
