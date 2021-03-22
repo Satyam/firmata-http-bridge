@@ -11,7 +11,7 @@
     "postbuild": "cp src/expose__dirname.cjs dist",
     "test": "jest -w=1",
     "coverage": "jest -w=1 --coverage",
-    "docs": "typedoc src/*.ts",
+    "docs": "typedoc src/**/*.ts src/*.ts",
     "inspect": "node --loader ts-node/esm --inspect-brk -- src/index.ts"
   },
   "repository": {
