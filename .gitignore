@@ -105,6 +105,3 @@ dist
 
 # Documentation
 docs/
-public/
-!public/index.html
-!public/something.txt
