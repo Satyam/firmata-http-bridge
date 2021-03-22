@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <script src="/socket.io/socket.io.min.js"></script>
+  </head>
+  <body>
+    <script>
+      const socket = io();
+      socket.on('connect', () => {
+        console.log('connected', socket.id);
+      });
+      socket.on('reply', (...args) => {
+        console.log('reply', ...args);
+      });
+      socket.on('hello', (...args) => {
+        console.log('hello', ...args);
+      });
+      socket.on('disconnect', () => {
+        console.log(disconnected);
+      });
+    </script>
+  </body>
+</html>
