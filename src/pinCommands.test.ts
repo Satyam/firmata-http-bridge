@@ -1,6 +1,7 @@
 import Board from 'firmata';
 
-import './jest-setup.util';
+import extendJest from './jest-setup.util.js';
+
 import config from './config.js';
 import { pinMode, digitalWrite, digitalRead } from './pinCommands.js';
 import {
@@ -19,6 +20,7 @@ const BAD_MODE = 999;
 let board: Board;
 
 beforeAll((done) => {
+  extendJest(expect);
   board = new Board(config.USB_PORT);
   board.on('ready', done);
   board.on('error', () => {

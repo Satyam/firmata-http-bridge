@@ -11,11 +11,13 @@ import {
   digitalReadActionBuilder,
 } from '../actionBuilders.js';
 
+import extendJest from '../jest-setup.util.js';
 
 const buildUrl = (...path: (string | number)[]): string =>
   `http://localhost:${config.HTTP_PORT}/${path.join('/')}`;
 
-const postCommand: (action: FSA) => Promise<FSA> = (action) => fetch(
+const postCommand: (action: FSA) => Promise<FSA> = (action) =>
+  fetch(
     buildUrl('command'),
 
     {
@@ -25,7 +27,6 @@ const postCommand: (action: FSA) => Promise<FSA> = (action) => fetch(
     }
   ).then((res) => res.json());
 
-
 const LED_BUILTIN = 13;
 const INPUT_PIN = 2;
 
@@ -33,16 +34,17 @@ const BAD_PIN = 999;
 const BAD_MODE = 999;
 
 let board: Board;
-beforeAll(() =>
-  start()
+beforeAll(() => {
+  extendJest(expect);
+  return start()
     .then((props) => {
       board = props.board;
     })
     .catch(() => {
       // If it fails here it probably means the board is not connected or powered
       process.exit(1);
-    })
-);
+    });
+});
 
 afterAll(stop);
 

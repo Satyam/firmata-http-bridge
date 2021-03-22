@@ -20,8 +20,8 @@
     "include": [
         "src/**/*.ts"
     ],
-    // "exclude": [
-    //     "src/**/*.test.?s",
-    //     "src/**/*.util.?s"
-    // ],
+    "exclude": [
+        "src/**/*.test.?s",
+        "src/**/*.util.?s"
+    ],
 }
