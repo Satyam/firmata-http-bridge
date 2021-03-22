@@ -49,6 +49,7 @@ describe('server commands', () => {
     });
     test('Some content from public', async () => {
       const res = await fetch(buildUrl('something.txt'));
+      expect(res.status).toBe(200);
       expect(await res.text()).toMatchInlineSnapshot(`
         "Hello World!
         "
@@ -58,21 +59,15 @@ describe('server commands', () => {
       const res = await fetch(buildUrl('nosuchfile.txt'));
       expect(res.status).toBe(404);
     });
-    test('bad command', async () => {
-      const res = await postCommand({
-        type: 'nonsense',
-        payload: {},
-      });
-      expect(res).toMatchInlineSnapshot(`
-        Object {
-          "error": Object {
-            "code": 1,
-            "msg": "Invalid command",
-          },
-          "payload": Object {},
-          "type": "nonsense",
-        }
-      `);
+    test('Some content from dist', async () => {
+      const res = await fetch(buildUrl('dist/index.js'));
+      expect(res.status).toBe(200);
+      expect(res.headers.get('content-type')).toMatch(/^application\/javascript/);
+      expect(parseInt(res.headers.get('content-length'))).toBeGreaterThan(0);
+    });
+    test('Non-existing content', async () => {
+      const res = await fetch(buildUrl('dist/nosuchfile.txt'));
+      expect(res.status).toBe(404);
     });
   });
 });

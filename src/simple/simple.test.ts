@@ -30,6 +30,7 @@ describe('Simple URL GET requests', () => {
   describe('Various basic status calls', () => {
     test('Version', async () => {
       const res = await fetch(buildUrl('version'));
+      expect(res.status).toBe(200);
       expect(await res.text()).toMatchInlineSnapshot(`
         "<h3>Firmware version</h3><pre>{
           \\"name\\": \\"StandardFirmata.ino\\",
@@ -42,6 +43,7 @@ describe('Simple URL GET requests', () => {
     });
     test('Analog Pins', async () => {
       const res = await fetch(buildUrl('analogPins'));
+      expect(res.status).toBe(200);
       expect(await res.text()).toMatchInlineSnapshot(`
         "<h3>Analog pins</h3><pre>[
           14,
@@ -55,12 +57,14 @@ describe('Simple URL GET requests', () => {
     });
     test('Digital Pins', async () => {
       const res = await fetch(buildUrl('digitalPins'));
+      expect(res.status).toBe(200);
       expect(await res.text()).toMatchInlineSnapshot(
         `"There are 20 pins in this board"`
       );
     });
     test('Single Digital Pin', async () => {
       const res = await fetch(buildUrl('digitalPins', 1));
+      expect(res.status).toBe(200);
       expect(await res.text()).toMatchInlineSnapshot(`
         "<h3>Pin 1</h3><pre>{
           \\"supportedModes\\": [],
@@ -69,6 +73,11 @@ describe('Simple URL GET requests', () => {
           \\"analogChannel\\": 127
         }</pre>"
       `);
+    });
+    test('Single Digital Pin with bad pin', async () => {
+      const res = await fetch(buildUrl('digitalPins', BAD_PIN));
+      expect(res.status).toBe(400);
+      expect(await res.text()).toMatchInlineSnapshot(`"Invalid Pin 999"`);
     });
   });
   describe('pin mode', () => {

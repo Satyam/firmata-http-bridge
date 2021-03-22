@@ -18,12 +18,12 @@
         }
     },
     "include": [
-        "src/**/*"
+        "src/**/*.ts"
     ],
-    "exclude": [
-        "src/**/*.test.?s",
-        "src/**/*.util.?s"
-    ],
+    // "exclude": [
+    //     "src/**/*.test.?s",
+    //     "src/**/*.util.?s"
+    // ],
     "typedocOptions": {
         "out": "docs",
         "exclude": [

@@ -1,8 +1,6 @@
 import fetch from 'node-fetch';
 import Board from 'firmata';
 
-import './jest-setup.util.ts';
-
 import config from '../config.js';
 import { start, stop } from '../server.js';
 
@@ -47,6 +45,23 @@ beforeAll(() =>
 );
 
 afterAll(stop);
+
+test('bad command', async () => {
+  const res = await postCommand({
+    type: 'nonsense',
+    payload: {},
+  });
+  expect(res).toMatchInlineSnapshot(`
+    Object {
+      "error": Object {
+        "code": 1,
+        "msg": "Invalid command",
+      },
+      "payload": Object {},
+      "type": "nonsense",
+    }
+  `);
+});
 
 describe('pin mode', () => {
   test('pin mode', async () => {
