@@ -84,9 +84,5 @@ export default function setup({ app, http, board }: SetupType): void {
     digitalRead(pin).then(function (value) {
       res.send(`Pin ${pin} returned ${value}`);
     });
-    // board.digitalRead(pin, function (value) {
-    //   board.reportDigitalPin(pin, 0);
-    //   res.send(`Pin ${pin} returned ${value}`);
-    // });
   });
 }
