@@ -3,6 +3,8 @@ import Board from 'firmata';
 import extendJest from './jest-setup.util.js';
 
 import config from './config.js';
+import { board } from './serverSetup.js';
+
 import { pinMode, digitalWrite, digitalRead } from './pinCommands.js';
 import {
   pinModeActionBuilder,
@@ -17,15 +19,14 @@ const LED_BUILTIN = 13;
 const BAD_PIN = 999;
 const BAD_MODE = 999;
 
-let board: Board;
-
 beforeAll((done) => {
   extendJest(expect);
-  board = new Board(config.USB_PORT);
   board.on('ready', done);
-  board.on('error', () => {
+  board.on('error', (error) => {
+    console.error(error);
+    done(error);
     // If it fails here it probably means the board is not connected or powered
-    process.exit(1);
+    // process.exit(1);
   });
 });
 

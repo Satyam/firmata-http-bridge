@@ -3,6 +3,7 @@ import Board from 'firmata';
 
 import config from '../config.js';
 import { start, stop } from '../server.js';
+import { board } from '../serverSetup.js';
 
 const buildUrl = (...path: (string | number)[]): string =>
   `http://localhost:${config.HTTP_PORT}/${path.join('/')}`;
@@ -13,16 +14,11 @@ const INPUT_PIN = 2;
 const BAD_PIN = 999;
 const BAD_MODE = 999;
 
-let board: Board;
 beforeAll(() =>
-  start()
-    .then((props) => {
-      board = props.board;
-    })
-    .catch(() => {
-      // If it fails here it probably means the board is not connected or powered
-      process.exit(1);
-    })
+  start().catch(() => {
+    // If it fails here it probably means the board is not connected or powered
+    process.exit(1);
+  })
 );
 
 afterAll(stop);

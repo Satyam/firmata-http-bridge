@@ -3,6 +3,7 @@ import Board from 'firmata';
 
 import config from '../config.js';
 import { start, stop } from '../server.js';
+import { board } from '../serverSetup.js';
 
 import { FSA, ErrorCodes } from '../types.js';
 import {
@@ -33,17 +34,12 @@ const INPUT_PIN = 2;
 const BAD_PIN = 999;
 const BAD_MODE = 999;
 
-let board: Board;
 beforeAll(() => {
   extendJest(expect);
-  return start()
-    .then((props) => {
-      board = props.board;
-    })
-    .catch(() => {
-      // If it fails here it probably means the board is not connected or powered
-      process.exit(1);
-    });
+  return start().catch(() => {
+    // If it fails here it probably means the board is not connected or powered
+    process.exit(1);
+  });
 });
 
 afterAll(stop);

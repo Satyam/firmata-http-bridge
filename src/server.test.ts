@@ -1,8 +1,8 @@
-import Board from 'firmata';
 import fetch from 'node-fetch';
 
 import config from './config.js';
 import { start, stop } from './server.js';
+
 import { FSA } from './types.js';
 
 const LED_BUILTIN = 13;
@@ -10,17 +10,11 @@ const LED_BUILTIN = 13;
 const BAD_PIN = 999;
 const BAD_MODE = 999;
 
-let board: Board;
-
 beforeAll(() =>
-  start()
-    .then((props) => {
-      board = props.board;
-    })
-    .catch(() => {
-      // If it fails here it probably means the board is not connected or powered
-      process.exit(1);
-    })
+  start().catch(() => {
+    // If it fails here it probably means the board is not connected or powered
+    process.exit(1);
+  })
 );
 
 afterAll(stop);
@@ -62,7 +56,9 @@ describe('server commands', () => {
     test('Some content from dist', async () => {
       const res = await fetch(buildUrl('dist/index.js'));
       expect(res.status).toBe(200);
-      expect(res.headers.get('content-type')).toMatch(/^application\/javascript/);
+      expect(res.headers.get('content-type')).toMatch(
+        /^application\/javascript/
+      );
       expect(parseInt(res.headers.get('content-length'))).toBeGreaterThan(0);
     });
     test('Non-existing content', async () => {
