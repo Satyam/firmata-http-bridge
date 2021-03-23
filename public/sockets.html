@@ -34,6 +34,10 @@
       button {
         margin-top: 1em;
       }
+      .spaceButtons button {
+        margin-left: 0.5em;
+        margin-right: 0.5em;
+      }
     </style>
   </head>
   <body>
@@ -64,10 +68,6 @@
         </div>
         <div><button id="pinModeButton">Send</button></div>
       </div>
-      <fieldset class="right">
-        <legend>Request</legend>
-        <pre id="pinModeRequest"></pre>
-      </fieldset>
     </fieldset>
     <h3>
       You must set the pin to the corresponding mode with the command above at
@@ -77,12 +77,12 @@
       <legend>digitalRead</legend>
       <div class="left">
         <div>pin: <input id="digitalReadPin" type="number" /></div>
-        <div><button id="digitalReadButton">Send</button></div>
+        <div class="spaceButtons">
+          <button id="digitalReadButton">Read Once</button>
+          <button id="digitalReadStartButton">Start Reading</button>
+          <button id="digitalReadStopButton">Stop Reading</button>
+        </div>
       </div>
-      <fieldset class="right">
-        <legend>Request</legend>
-        <pre id="digitalReadRequest"></pre>
-      </fieldset>
     </fieldset>
 
     <fieldset>
@@ -94,10 +94,6 @@
         <div>output: <input id="digitalWriteOutput" type="checkbox" /></div>
         <div><button id="digitalWriteButton">Send</button></div>
       </div>
-      <fieldset class="right">
-        <legend>Request</legend>
-        <pre id="digitalWriteRequest"></pre>
-      </fieldset>
     </fieldset>
     <fieldset>
       <legend>Replies</legend>
@@ -116,6 +112,8 @@
       import {
         pinModeActionBuilder,
         digitalReadActionBuilder,
+        digitalReadStartActionBuilder,
+        digitalReadStopActionBuilder,
         digitalWriteActionBuilder,
       } from '/dist/actionBuilders.js';
 
@@ -130,6 +128,14 @@
 
       const replyEl = document.getElementById('replies');
 
+      const logRequest = (request) => {
+        const rowEl = replyEl.insertRow(0);
+        rowEl.insertCell(-1).innerHTML = new Date().toLocaleTimeString();
+        rowEl.insertCell(-1).innerHTML = request.type;
+        rowEl.insertCell(-1).innerHTML = Object.keys(request.payload)
+          .map((k) => `${k}=${request.payload[k]}`)
+          .join('; ');
+      };
       const logReply = (reply) => {
         const fsa = JSON.parse(reply);
         const rowEl = replyEl.insertRow(0);
@@ -140,7 +146,6 @@
         rowEl.insertCell(-1).innerHTML = Object.keys(fsa.payload)
           .map((k) => `${k}=${fsa.payload[k]}`)
           .join('; ');
-        JSON.stringify(fsa.payload);
         rowEl.insertCell(-1).innerHTML = fsa.error
           ? `${fsa.error.code}: ${fsa.error.msg}`
           : '';
@@ -156,9 +161,10 @@
 
       const socket = io();
 
-      const emitCommand = (action) =>
+      const emitCommand = (action) => {
+        logRequest(action);
         socket.emit('command', JSON.stringify(action));
-
+      };
       socket.on('connect', () => logOther('connected', socket.id));
 
       socket.on('reply', logReply);
@@ -170,16 +176,22 @@
       document.getElementById('pinModeButton').onclick = (ev) => {
         const pin = getNumber('pinModePin');
         const mode = getNumber('pinModeMode');
-        const request = pinModeActionBuilder(pin, mode);
-        writeFSA('pinModeRequest', request);
-        emitCommand(request);
+        emitCommand(pinModeActionBuilder(pin, mode));
       };
 
       document.getElementById('digitalReadButton').onclick = (ev) => {
         const pin = getNumber('digitalReadPin');
-        const request = digitalReadActionBuilder(pin);
-        writeFSA('digitalReadRequest', request);
-        emitCommand(request);
+        emitCommand(digitalReadActionBuilder(pin));
+      };
+
+      document.getElementById('digitalReadStartButton').onclick = (ev) => {
+        const pin = getNumber('digitalReadPin');
+        emitCommand(digitalReadStartActionBuilder(pin));
+      };
+
+      document.getElementById('digitalReadStopButton').onclick = (ev) => {
+        const pin = getNumber('digitalReadPin');
+        emitCommand(digitalReadStopActionBuilder(pin));
       };
 
       document.getElementById('digitalWriteButton').onclick = (ev) => {
@@ -187,9 +199,7 @@
         const output = document.getElementById('digitalWriteOutput').checked
           ? 1
           : 0;
-        const request = digitalWriteActionBuilder(pin, output);
-        writeFSA('digitalWriteRequest', request);
-        emitCommand(request);
+        emitCommand(digitalWriteActionBuilder(pin, output));
       };
     </script>
   </body>

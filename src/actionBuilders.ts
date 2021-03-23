@@ -102,6 +102,54 @@ export function digitalReadActionBuilder(pin: number): digitalReadFSA {
     },
   };
 }
+
+/**
+ * Describes the FSA for the `digitalReadStart` command
+ * @exports
+ * @typedef {object} digitalReadStartFSA
+ */
+export type digitalReadStartFSA = FSA<'digitalReadStart', { pin: number }>;
+
+/**
+ * Builds the FSA for the `digitalReadStart` command.
+ *
+ * @export
+ * @param {number} pin pin to be read
+ * @return {digitalReadFSA}
+ */
+export function digitalReadStartActionBuilder(
+  pin: number
+): digitalReadStartFSA {
+  return {
+    type: 'digitalReadStart',
+    payload: {
+      pin,
+    },
+  };
+}
+
+/**
+ * Describes the FSA for the `digitalReadStop` command
+ * @exports
+ * @typedef {object} digitalReadStopFSA
+ */
+export type digitalReadStopFSA = FSA<'digitalReadStop', { pin: number }>;
+
+/**
+ * Builds the FSA for the `digitalReadStop` command.
+ *
+ * @export
+ * @param {number} pin pin to be read
+ * @return {digitalReadFSA}
+ */
+export function digitalReadStopActionBuilder(pin: number): digitalReadStopFSA {
+  return {
+    type: 'digitalReadStop',
+    payload: {
+      pin,
+    },
+  };
+}
 /**
  * Helper function to produce a reply FSA from the given FSA in `requestAction`.
  * The original action is not modified.

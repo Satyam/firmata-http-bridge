@@ -41,9 +41,3 @@ export type Commands<F extends FSA = FSA, Meta = any> = (
   board: Board,
   action: F
 ) => FSA | Promise<FSA>;
-
-export type SetupType = {
-  app: Express;
-  http: Server;
-  board: Board;
-};

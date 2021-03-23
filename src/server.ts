@@ -1,27 +1,15 @@
-import express, { Express } from 'express';
-import { createServer, Server } from 'http';
+import express from 'express';
 import path from 'path';
-
-// https://github.com/firmata/firmata.js/tree/master/packages/firmata.js
-import Board from 'firmata';
 
 import config from './config.js';
 
+import { board, app, http } from './serverSetup.js';
 import setupSimple from './simple/index.js';
 import setupPost from './post/index.js';
 import setupSockets from './sockets/index.js';
 
 // @ts-ignore
 import * as dn from './expose__dirname.cjs';
-
-export type SetupType = {
-  app: Express;
-  http: Server;
-  board: Board;
-};
-
-let http: Server;
-let board: Board;
 
 function pathResolve(relPath: string): string {
   // const dirname = __dirname || dn.__dirname;
@@ -36,20 +24,13 @@ function pathResolve(relPath: string): string {
  * @export
  * @return {Promise} A promise returning nothing
  */
-export function start(): Promise<SetupType> {
-  return new Promise<SetupType>((resolve, reject) => {
-    // initialize global variables
-    const app = express();
-    http = createServer(app);
-    board = new Board(config.USB_PORT);
-
-    board.on('error', reject);
-
+export function start(): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
     app.use(express.json());
 
-    setupSimple({ app, http, board });
-    setupPost({ app, http, board });
-    setupSockets({ app, http, board });
+    setupSimple();
+    setupPost();
+    setupSockets();
 
     app.get('/dist/*', (req, res) => {
       res.sendFile(req.path.replace(/\/dist\//, '/'), {
@@ -84,11 +65,12 @@ export function start(): Promise<SetupType> {
       });
     });
 
+    board.on('error', reject);
     board.on('ready', () => {
       console.log(`Arduino at ${config.USB_PORT} is ready to communicate`);
       http.listen(config.HTTP_PORT, () => {
         console.log(`Firmata bridge listening on port ${config.HTTP_PORT}!`);
-        resolve({ app, http, board });
+        resolve();
       });
     });
   });

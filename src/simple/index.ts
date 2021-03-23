@@ -1,10 +1,11 @@
 import { validDigitalPin, validMode, validOutput } from '../utils.js';
-import { SetupType } from '../types.js';
+import { app, board } from '../serverSetup.js';
 
 function jsonPre(msg: string, value: object): string {
   return `<h3>${msg}</h3><pre>${JSON.stringify(value, null, 2)}</pre>`;
 }
-export default function setup({ app, http, board }: SetupType): void {
+
+export default function setup(): void {
   app.get('/version', (req, res) => {
     res.send(jsonPre('Firmware version', board.firmware));
   });
@@ -22,7 +23,6 @@ export default function setup({ app, http, board }: SetupType): void {
         res.status(400).send(`Invalid Pin ${pin}`);
         return;
       }
-
       res.send(jsonPre(`Pin ${pin}`, pins[pin]));
     } else {
       res.send(`There are ${pins.length} pins in this board`);

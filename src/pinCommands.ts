@@ -4,15 +4,18 @@
  */
 import { validDigitalPin, validMode, validOutput } from './utils.js';
 import type Board from 'firmata';
-
+import type { Socket } from 'socket.io';
 import type {
   digitalWriteFSA,
   pinModeFSA,
   digitalReadFSA,
+  digitalReadStartFSA,
+  digitalReadStopFSA,
 } from './actionBuilders.js';
 
 import { FSA, ErrorCodes } from './types.js';
 import { makeReply } from './actionBuilders.js';
+import { app } from './serverSetup.js';
 
 /**
  * Describes the format of the commands dispatched from the web server.
@@ -127,4 +130,74 @@ export const digitalRead: Commands<digitalReadFSA> = (board, action) => {
       resolve(makeReply(action, { payload: { value } }));
     });
   });
+};
+
+/**
+ * Sends the `digitalReadStartFSA` action type to the given board.
+ * It is best to use [[digitalReadStartActionBuilder]] to build the action
+ *
+ * This function returns a reply FSA without the value requested.
+ * The value will be sent, via sockets, as they come.
+ * To cancel reporting on new values, call [[`digitalReadStop`]]
+ * If an error is detected if will immediately return an error FSA.
+ * @exports
+ * @param board - Board to send the command to
+ * @param action - FSA action to send
+ * @returns {FSA} A reply FSA
+ */
+export const digitalReadStart: Commands<digitalReadStartFSA> = (
+  board,
+  action
+) => {
+  const {
+    payload: { pin },
+  } = action;
+  if (!validDigitalPin(board, pin)) {
+    return makeReply(action, {
+      error: {
+        code: ErrorCodes.BAD_PIN,
+        msg: 'Invalid pin',
+      },
+    });
+  }
+
+  const socket = app.get('socket') as Socket;
+  board.digitalRead(pin, (value) => {
+    socket.emit(
+      'reply',
+      JSON.stringify(makeReply(action, { payload: { value } }))
+    );
+  });
+  return makeReply(action);
+};
+
+/**
+ * Sends the `digitalReadStopFSA` action type to the given board.
+ * It is best to use [[digitalReadStopActionBuilder]] to build the action
+ *
+ * This function stops a previous [[digitalReadStart]] command.
+ * If an error is detected if will immediately return an error FSA.
+ * @exports
+ * @param board - Board to send the command to
+ * @param action - FSA action to send
+ * @returns {FSA} A reply FSA
+ */
+export const digitalReadStop: Commands<digitalReadStopFSA> = (
+  board,
+  action
+) => {
+  const {
+    payload: { pin },
+  } = action;
+  if (!validDigitalPin(board, pin)) {
+    return makeReply(action, {
+      error: {
+        code: ErrorCodes.BAD_PIN,
+        msg: 'Invalid pin',
+      },
+    });
+  }
+
+  board.reportDigitalPin(pin, 0);
+  return makeReply(action);
 };

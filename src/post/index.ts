@@ -1,11 +1,12 @@
 import Board from 'firmata';
-import { FSA, ErrorCodes, SetupType } from '../types.js';
+import { FSA, ErrorCodes } from '../types.js';
 import {
   digitalRead,
   digitalWrite,
   pinMode,
   Commands,
 } from '../pinCommands.js';
+import { app, board } from '../serverSetup.js';
 
 const commands: Record<string, Commands> = {
   digitalRead,
@@ -13,7 +14,7 @@ const commands: Record<string, Commands> = {
   pinMode,
 };
 
-export default function setup({ app, http, board }: SetupType): void {
+export default function setup(): void {
   app.post('/command', async function (req, res) {
     const action = req.body as FSA;
 

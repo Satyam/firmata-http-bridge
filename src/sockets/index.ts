@@ -1,9 +1,12 @@
 import { Server, Socket } from 'socket.io';
 import Board from 'firmata';
 
-import { FSA, ErrorCodes, SetupType } from '../types.js';
+import { app, http, board } from '../serverSetup.js';
+import { FSA, ErrorCodes } from '../types.js';
 import {
   digitalRead,
+  digitalReadStart,
+  digitalReadStop,
   digitalWrite,
   pinMode,
   Commands,
@@ -11,15 +14,18 @@ import {
 
 const commands: Record<string, Commands> = {
   digitalRead,
+  digitalReadStart,
+  digitalReadStop,
   digitalWrite,
   pinMode,
 };
 
-export default function setup({ app, http, board }: SetupType): void {
+export default function setup(): void {
   const io = new Server(http);
 
   io.on('connection', (socket: Socket) => {
     console.log(socket.id);
+    app.set('socket', socket);
 
     function reply(reply: FSA) {
       socket.emit('reply', JSON.stringify(reply));
