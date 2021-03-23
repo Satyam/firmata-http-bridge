@@ -25,7 +25,7 @@ export default function setup({ app, http, board }: SetupType): void {
       socket.emit('reply', JSON.stringify(reply));
     }
 
-    socket.on('command', async (anotherSocketId, msg) => {
+    socket.on('command', async (msg) => {
       const action = JSON.parse(msg) as FSA;
 
       const { type } = action;
