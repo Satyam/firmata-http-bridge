@@ -1,10 +1,35 @@
+/**
+ * Setup to accept commands via plain HTTP GET messages,
+ * dispatch them, and send back their replies
+ * @module
+ */
 import { validDigitalPin, validMode, validOutput } from '../utils.js';
 import { app, board } from '../serverSetup.js';
 
+/**
+ * Returns the HTML code for a nicely formatted object
+ * with a message
+ * @param msg the message to set as an `<h3>` heading
+ * @param value the object to be formatted in a `<pre>`.
+ * @returns
+ */
 function jsonPre(msg: string, value: object): string {
   return `<h3>${msg}</h3><pre>${JSON.stringify(value, null, 2)}</pre>`;
 }
 
+/**
+ * Sets the express server to respond to the following HTTP GET commands,
+ * executes them and replies in regular text or HTML messages.
+ *
+ * * `/version`
+ * * `/analogPins`
+ * * `/digitalPins/:pin?`
+ * * `/pinMode/:pin/:mode`
+ * * `/digitalWrite/:pin/:output`
+ * * `/digitalRead/:pin`
+ *
+ * @export
+ */
 export default function setup(): void {
   app.get('/version', (req, res) => {
     res.send(jsonPre('Firmware version', board.firmware));

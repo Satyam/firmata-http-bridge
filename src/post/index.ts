@@ -1,4 +1,10 @@
-import Board from 'firmata';
+/**
+ * Setup to accept FSA commands via HTTP POST,
+ * dispatches them,
+ * and send back their replies
+ * @module
+ */
+
 import { FSA, ErrorCodes } from '../types.js';
 import {
   digitalRead,
@@ -6,7 +12,8 @@ import {
   pinMode,
   Commands,
 } from '../pinCommands.js';
-import { app, board } from '../serverSetup.js';
+
+import { app } from '../serverSetup.js';
 
 const commands: Record<string, Commands> = {
   digitalRead,
@@ -14,6 +21,17 @@ const commands: Record<string, Commands> = {
   pinMode,
 };
 
+/**
+ * Sets the express server to respond to HTTP POST commands,
+ * containing the following FSA actions,
+ * executes them and replies in a JSON-encoded FSA message.
+ *
+ * * `digitalReadFSA`
+ * * `digitalWriteFSA`
+ * * `pinModeFSA`
+ *
+ * @export
+ */
 export default function setup(): void {
   app.post('/command', async function (req, res) {
     const action = req.body as FSA;
@@ -21,7 +39,7 @@ export default function setup(): void {
     const { type } = action;
 
     if (type in commands) {
-      res.json(await commands[type](board as Board, action));
+      res.json(await commands[type](action));
     } else {
       res.json({
         ...action,

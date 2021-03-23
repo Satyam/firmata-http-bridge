@@ -1,7 +1,12 @@
-import { Server, Socket } from 'socket.io';
-import Board from 'firmata';
+/**
+ * Setup to accept commands via sockets, dispatch them,
+ * and send back their replies
+ * @module
+ */
 
-import { app, http, board } from '../serverSetup.js';
+import { Server, Socket } from 'socket.io';
+
+import { app, http } from '../serverSetup.js';
 import { FSA, ErrorCodes } from '../types.js';
 import {
   digitalRead,
@@ -19,12 +24,29 @@ const commands: Record<string, Commands> = {
   digitalWrite,
   pinMode,
 };
-
+/**
+ * Sets up a new socket server to accept the following FSA actions via sockets and
+ * dispatches them.
+ *
+ * * `digitalReadFSA`
+ * * `digitalReadSubscribeFSA`
+ * * `digitalReadUnsubscribeFSA`
+ * * `digitalWriteFSA`
+ * * `pinModeFSA`
+ *
+ * Sets the `socket` in the `app` express server so that it can be
+ * read via `app.get('socket') as Socket`.
+ *
+ * All replies will be *emitted* as JSON-encoded objects,
+ * via sockets with the `reply` as the `eventName`
+ *
+ * Once initialized it emits a message with `hello` as the `eventName` and `world` as the message,
+ * which can be safely ignored.
+ */
 export default function setup(): void {
   const io = new Server(http);
 
   io.on('connection', (socket: Socket) => {
-    console.log(socket.id);
     app.set('socket', socket);
 
     function reply(reply: FSA) {
@@ -37,7 +59,7 @@ export default function setup(): void {
       const { type } = action;
 
       if (type in commands) {
-        reply(await commands[type](board as Board, action));
+        reply(await commands[type](action));
       } else {
         reply({
           ...action,
@@ -49,10 +71,5 @@ export default function setup(): void {
       }
     });
     socket.emit('hello', 'world');
-
-    socket.on('disconnect', (reason) => {
-      console.log(`Socket ${socket.id} disconnected`, reason);
-    });
-    // ...
   });
 }
