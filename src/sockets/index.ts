@@ -5,8 +5,8 @@ import { app, http, board } from '../serverSetup.js';
 import { FSA, ErrorCodes } from '../types.js';
 import {
   digitalRead,
-  digitalReadStart,
-  digitalReadStop,
+  digitalReadSubscribe,
+  digitalReadUnsubscribe,
   digitalWrite,
   pinMode,
   Commands,
@@ -14,8 +14,8 @@ import {
 
 const commands: Record<string, Commands> = {
   digitalRead,
-  digitalReadStart,
-  digitalReadStop,
+  digitalReadSubscribe,
+  digitalReadUnsubscribe,
   digitalWrite,
   pinMode,
 };

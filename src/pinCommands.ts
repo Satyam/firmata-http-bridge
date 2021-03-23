@@ -9,8 +9,8 @@ import type {
   digitalWriteFSA,
   pinModeFSA,
   digitalReadFSA,
-  digitalReadStartFSA,
-  digitalReadStopFSA,
+  digitalReadSubscribeFSA,
+  digitalReadUnsubscribeFSA,
 } from './actionBuilders.js';
 
 import { FSA, ErrorCodes } from './types.js';
@@ -133,19 +133,19 @@ export const digitalRead: Commands<digitalReadFSA> = (board, action) => {
 };
 
 /**
- * Sends the `digitalReadStartFSA` action type to the given board.
- * It is best to use [[digitalReadStartActionBuilder]] to build the action
+ * Sends the `digitalReadSubscribeFSA` action type to the given board.
+ * It is best to use [[digitalReadSubscribeActionBuilder]] to build the action
  *
  * This function returns a reply FSA without the value requested.
  * The value will be sent, via sockets, as they come.
- * To cancel reporting on new values, call [[`digitalReadStop`]]
+ * To cancel reporting on new values, call [[`digitalReadUnsubscribe`]]
  * If an error is detected if will immediately return an error FSA.
  * @exports
  * @param board - Board to send the command to
  * @param action - FSA action to send
  * @returns {FSA} A reply FSA
  */
-export const digitalReadStart: Commands<digitalReadStartFSA> = (
+export const digitalReadSubscribe: Commands<digitalReadSubscribeFSA> = (
   board,
   action
 ) => {
@@ -172,17 +172,17 @@ export const digitalReadStart: Commands<digitalReadStartFSA> = (
 };
 
 /**
- * Sends the `digitalReadStopFSA` action type to the given board.
- * It is best to use [[digitalReadStopActionBuilder]] to build the action
+ * Sends the `digitalReadUnsubscribeFSA` action type to the given board.
+ * It is best to use [[digitalReadUnsubscribeActionBuilder]] to build the action
  *
- * This function stops a previous [[digitalReadStart]] command.
+ * This function stops a previous [[digitalReadSubscribe]] command.
  * If an error is detected if will immediately return an error FSA.
  * @exports
  * @param board - Board to send the command to
  * @param action - FSA action to send
  * @returns {FSA} A reply FSA
  */
-export const digitalReadStop: Commands<digitalReadStopFSA> = (
+export const digitalReadUnsubscribe: Commands<digitalReadUnsubscribeFSA> = (
   board,
   action
 ) => {

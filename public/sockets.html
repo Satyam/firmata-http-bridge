@@ -79,8 +79,10 @@
         <div>pin: <input id="digitalReadPin" type="number" /></div>
         <div class="spaceButtons">
           <button id="digitalReadButton">Read Once</button>
-          <button id="digitalReadStartButton">Start Reading</button>
-          <button id="digitalReadStopButton">Stop Reading</button>
+          <button id="digitalReadSubscribeButton">Subscribe to Reading</button>
+          <button id="digitalReadUnsubscribeButton">
+            Unsubscribe to Reading
+          </button>
         </div>
       </div>
     </fieldset>
@@ -112,8 +114,8 @@
       import {
         pinModeActionBuilder,
         digitalReadActionBuilder,
-        digitalReadStartActionBuilder,
-        digitalReadStopActionBuilder,
+        digitalReadSubscribeActionBuilder,
+        digitalReadUnsubscribeActionBuilder,
         digitalWriteActionBuilder,
       } from '/dist/actionBuilders.js';
 
@@ -184,14 +186,16 @@
         emitCommand(digitalReadActionBuilder(pin));
       };
 
-      document.getElementById('digitalReadStartButton').onclick = (ev) => {
+      document.getElementById('digitalReadSubscribeButton').onclick = (ev) => {
         const pin = getNumber('digitalReadPin');
-        emitCommand(digitalReadStartActionBuilder(pin));
+        emitCommand(digitalReadSubscribeActionBuilder(pin));
       };
 
-      document.getElementById('digitalReadStopButton').onclick = (ev) => {
+      document.getElementById('digitalReadUnsubscribeButton').onclick = (
+        ev
+      ) => {
         const pin = getNumber('digitalReadPin');
-        emitCommand(digitalReadStopActionBuilder(pin));
+        emitCommand(digitalReadUnsubscribeActionBuilder(pin));
       };
 
       document.getElementById('digitalWriteButton').onclick = (ev) => {

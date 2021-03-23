@@ -104,24 +104,27 @@ export function digitalReadActionBuilder(pin: number): digitalReadFSA {
 }
 
 /**
- * Describes the FSA for the `digitalReadStart` command
+ * Describes the FSA for the `digitalReadSubscribe` command
  * @exports
- * @typedef {object} digitalReadStartFSA
+ * @typedef {object} digitalReadSubscribeFSA
  */
-export type digitalReadStartFSA = FSA<'digitalReadStart', { pin: number }>;
+export type digitalReadSubscribeFSA = FSA<
+  'digitalReadSubscribe',
+  { pin: number }
+>;
 
 /**
- * Builds the FSA for the `digitalReadStart` command.
+ * Builds the FSA for the `digitalReadSubscribe` command.
  *
  * @export
  * @param {number} pin pin to be read
  * @return {digitalReadFSA}
  */
-export function digitalReadStartActionBuilder(
+export function digitalReadSubscribeActionBuilder(
   pin: number
-): digitalReadStartFSA {
+): digitalReadSubscribeFSA {
   return {
-    type: 'digitalReadStart',
+    type: 'digitalReadSubscribe',
     payload: {
       pin,
     },
@@ -129,22 +132,27 @@ export function digitalReadStartActionBuilder(
 }
 
 /**
- * Describes the FSA for the `digitalReadStop` command
+ * Describes the FSA for the `digitalReadUnsubscribe` command
  * @exports
- * @typedef {object} digitalReadStopFSA
+ * @typedef {object} digitalReadUnsubscribeFSA
  */
-export type digitalReadStopFSA = FSA<'digitalReadStop', { pin: number }>;
+export type digitalReadUnsubscribeFSA = FSA<
+  'digitalReadUnsubscribe',
+  { pin: number }
+>;
 
 /**
- * Builds the FSA for the `digitalReadStop` command.
+ * Builds the FSA for the `digitalReadUnsubscribe` command.
  *
  * @export
  * @param {number} pin pin to be read
  * @return {digitalReadFSA}
  */
-export function digitalReadStopActionBuilder(pin: number): digitalReadStopFSA {
+export function digitalReadUnsubscribeActionBuilder(
+  pin: number
+): digitalReadUnsubscribeFSA {
   return {
-    type: 'digitalReadStop',
+    type: 'digitalReadUnsubscribe',
     payload: {
       pin,
     },
