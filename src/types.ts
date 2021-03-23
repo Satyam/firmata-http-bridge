@@ -31,13 +31,3 @@ export type FSA<Type extends string = string, Payload = any, Meta = any> = {
     msg: string;
   };
 };
-
-/**
- * Describes the format of the commands dispatched from the web server.
- * @typeParam F the shape of the FSA used in this command
- * @typeParam Meta the shape of extra `meta` properties
- */
-export type Commands<F extends FSA = FSA, Meta = any> = (
-  board: Board,
-  action: F
-) => FSA | Promise<FSA>;
