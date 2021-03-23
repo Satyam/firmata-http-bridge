@@ -3,7 +3,6 @@
     <link rel="icon" href="/favicon.svg" />
     <style>
       pre {
-        float: right;
         border: silver thin solid;
         margin: 0;
         padding: 0.5em;
@@ -11,8 +10,17 @@
 
       .left {
         float: left;
+        width: 30%;
+      }
+      .right {
+        float: right;
+        width: 30%;
       }
 
+      .center {
+        float: left;
+        width: 30%;
+      }
       input,
       select,
       button {
@@ -22,62 +30,80 @@
   </head>
 
   <body>
-    <div>
-      <a href="/">Home</a>
-      <fieldset>
-        <legend>pinMode</legend>
-        <div class="left">
-          <div>
-            pin: <input id="pinModePin" type="number" /> (13 for LED_BUILTIN)
-          </div>
-          <div>
-            mode:
-            <select id="pinModeMode">
-              <option value="0">INPUT</option>
-              <option value="1">OUTPUT</option>
-              <option value="2">ANALOG</option>
-              <option value="3">PWM</option>
-              <option value="4">SERVO</option>
-              <option value="5">SHIFT</option>
-              <option value="6">I2C</option>
-              <option value="7">ONEWIRE:</option>
-              <option value="8">STEPPER</option>
-              <option value="10">SERIAL</option>
-              <option value="11">PULLUP</option>
-              <option value="127">IGNORE</option>
-              <option value="16" selected>UNKOWN</option>
-            </select>
-          </div>
-          <div><button id="pinModeButton">Send</button></div>
+    <a href="/">Home</a>
+    <fieldset>
+      <legend>pinMode</legend>
+      <div class="left">
+        <div>
+          pin: <input id="pinModePin" type="number" /> (13 for LED_BUILTIN)
         </div>
+        <div>
+          mode:
+          <select id="pinModeMode">
+            <option value="0">INPUT</option>
+            <option value="1">OUTPUT</option>
+            <option value="2">ANALOG</option>
+            <option value="3">PWM</option>
+            <option value="4">SERVO</option>
+            <option value="5">SHIFT</option>
+            <option value="6">I2C</option>
+            <option value="7">ONEWIRE:</option>
+            <option value="8">STEPPER</option>
+            <option value="10">SERIAL</option>
+            <option value="11">PULLUP</option>
+            <option value="127">IGNORE</option>
+            <option value="16" selected>UNKOWN</option>
+          </select>
+        </div>
+        <div><button id="pinModeButton">Send</button></div>
+      </div>
+      <fieldset class="center">
+        <legend>Request</legend>
+        <pre id="pinModeRequest"></pre>
+      </fieldset>
+      <fieldset class="right">
+        <legend>Reply</legend>
         <pre id="pinModeReply"></pre>
       </fieldset>
-      <h3>
-        You must set the pin to the corresponding mode with the command above at
-        least once before you do any of the following:
-      </h3>
-      <fieldset>
-        <legend>digitalRead</legend>
-        <div class="left">
-          <div>pin: <input id="digitalReadPin" type="number" /></div>
-          <div><button id="digitalReadButton">Send</button></div>
-        </div>
+    </fieldset>
+    <h3>
+      You must set the pin to the corresponding mode with the command above at
+      least once before you do any of the following:
+    </h3>
+    <fieldset>
+      <legend>digitalRead</legend>
+      <div class="left">
+        <div>pin: <input id="digitalReadPin" type="number" /></div>
+        <div><button id="digitalReadButton">Send</button></div>
+      </div>
+      <fieldset class="center">
+        <legend>Request</legend>
+        <pre id="digitalReadRequest"></pre>
+      </fieldset>
+      <fieldset class="right">
+        <legend>Reply</legend>
         <pre id="digitalReadReply"></pre>
       </fieldset>
+    </fieldset>
 
-      <fieldset>
-        <legend>digitalWrite</legend>
-        <div class="left">
-          <div>
-            pin: <input id="digitalWritePin" type="number" /> (13 for
-            LED_BUILTIN)
-          </div>
-          <div>output: <input id="digitalWriteOutput" type="checkbox" /></div>
-          <div><button id="digitalWriteButton">Send</button></div>
+    <fieldset>
+      <legend>digitalWrite</legend>
+      <div class="left">
+        <div>
+          pin: <input id="digitalWritePin" type="number" /> (13 for LED_BUILTIN)
         </div>
+        <div>output: <input id="digitalWriteOutput" type="checkbox" /></div>
+        <div><button id="digitalWriteButton">Send</button></div>
+      </div>
+      <fieldset class="center">
+        <legend>Request</legend>
+        <pre id="digitalWriteRequest"></pre>
+      </fieldset>
+      <fieldset class="right">
+        <legend>Reply</legend>
         <pre id="digitalWriteReply"></pre>
       </fieldset>
-    </div>
+    </fieldset>
 
     <script type="module">
       import {
@@ -87,18 +113,15 @@
       } from '/dist/actionBuilders.js';
 
       const postCommand = (action) =>
-        fetch(
-          '/command',
-
-          {
-            method: 'post',
-            body: JSON.stringify(action),
-            headers: { 'Content-Type': 'application/json' },
-          }
-        ).then((res) => res.json());
+        fetch('/command', {
+          method: 'post',
+          body: JSON.stringify(action),
+          headers: { 'Content-Type': 'application/json' },
+        }).then((res) => res.json());
 
       const getNumber = (id) => parseInt(document.getElementById(id).value, 10);
-      const writeReply = (where, reply) =>
+
+      const writeFSA = (where, reply) =>
         (document.getElementById(where).innerHTML = JSON.stringify(
           reply,
           null,
@@ -108,15 +131,19 @@
       document.getElementById('pinModeButton').onclick = (ev) => {
         const pin = getNumber('pinModePin');
         const mode = getNumber('pinModeMode');
-        postCommand(pinModeActionBuilder(pin, mode)).then((reply) => {
-          writeReply('pinModeReply', reply);
+        const request = pinModeActionBuilder(pin, mode);
+        writeFSA('pinModeRequest', request);
+        postCommand(request).then((reply) => {
+          writeFSA('pinModeReply', reply);
         });
       };
 
       document.getElementById('digitalReadButton').onclick = (ev) => {
         const pin = getNumber('digitalReadPin');
-        postCommand(digitalReadActionBuilder(pin)).then((reply) => {
-          writeReply('digitalReadReply', reply);
+        const request = digitalReadActionBuilder(pin);
+        writeFSA('digitalReadRequest', request);
+        postCommand(request).then((reply) => {
+          writeFSA('digitalReadReply', reply);
         });
       };
 
@@ -125,8 +152,10 @@
         const output = document.getElementById('digitalWriteOutput').checked
           ? 1
           : 0;
-        postCommand(digitalWriteActionBuilder(pin, output)).then((reply) => {
-          writeReply('digitalWriteReply', reply);
+        const request = digitalWriteActionBuilder(pin, output);
+        writeFSA('digitalWriteRequest', request);
+        postCommand(request).then((reply) => {
+          writeFSA('digitalWriteReply', reply);
         });
       };
     </script>
