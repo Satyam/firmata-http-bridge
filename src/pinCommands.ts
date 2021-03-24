@@ -3,8 +3,6 @@
  * @module
  */
 import { validDigitalPin, validMode, validOutput } from './utils.js';
-import type Board from 'firmata';
-import type { Socket } from 'socket.io';
 import type {
   digitalWriteFSA,
   pinModeFSA,
@@ -15,13 +13,23 @@ import type {
 
 import { FSA, ErrorCodes } from './types.js';
 import { makeReply } from './actionBuilders.js';
-import { app, board } from './serverSetup.js';
+import { board } from './serverSetup.js';
 
-type ImmediateCommand<F extends FSA = FSA, Meta = any> = (action: F) => FSA;
+type ImmediateCommand<F extends FSA = FSA, Meta = any> = (
+  action: F,
+  meta?: Meta
+) => FSA;
 
 type PromiseCommand<F extends FSA = FSA, Meta = any> = (
-  action: F
+  action: F,
+  meta?: Meta
 ) => Promise<FSA>;
+
+export type CallbackCommand<
+  F extends FSA = FSA,
+  CB = (value: number) => void,
+  Meta = any
+> = (action: F, callback: CB, meta?: Meta) => FSA;
 /**
  * Describes the format of the commands dispatched from the web server.
  * @typeParam F the shape of the FSA used in this command
@@ -154,8 +162,9 @@ export const digitalRead: PromiseCommand<digitalReadFSA> = (action) => {
  * @param action - FSA action to send
  * @returns {FSA} A reply FSA
  */
-export const digitalReadSubscribe: ImmediateCommand<digitalReadSubscribeFSA> = (
-  action
+export const digitalReadSubscribe: CallbackCommand<digitalReadSubscribeFSA> = (
+  action,
+  callback
 ) => {
   const {
     payload: { pin },
@@ -169,13 +178,11 @@ export const digitalReadSubscribe: ImmediateCommand<digitalReadSubscribeFSA> = (
     });
   }
 
-  const socket = app.get('socket') as Socket;
-  board.digitalRead(pin, (value) => {
-    socket.emit(
-      'reply',
-      JSON.stringify(makeReply(action, { payload: { value } }))
-    );
-  });
+  if (board.pins[pin].report) {
+    board.reportDigitalPin(pin, 0);
+  }
+
+  board.digitalRead(pin, callback);
   return makeReply(action);
 };
 

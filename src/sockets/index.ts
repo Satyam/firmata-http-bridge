@@ -15,14 +15,19 @@ import {
   digitalWrite,
   pinMode,
   Commands,
+  CallbackCommand,
 } from '../pinCommands.js';
+import { makeReply, digitalReadActionBuilder } from '../actionBuilders.js';
 
 const commands: Record<string, Commands> = {
   digitalRead,
-  digitalReadSubscribe,
   digitalReadUnsubscribe,
   digitalWrite,
   pinMode,
+};
+
+const cbCommands: Record<string, CallbackCommand> = {
+  digitalReadSubscribe,
 };
 /**
  * Sets up a new socket server to accept the following FSA actions via sockets and
@@ -34,9 +39,6 @@ const commands: Record<string, Commands> = {
  * * `digitalWriteFSA`
  * * `pinModeFSA`
  *
- * Sets the `socket` in the `app` express server so that it can be
- * read via `app.get('socket') as Socket`.
- *
  * All replies will be *emitted* as JSON-encoded objects,
  * via sockets with the `reply` as the `eventName`
  *
@@ -47,8 +49,6 @@ export default function setup(): void {
   const io = new Server(http);
 
   io.on('connection', (socket: Socket) => {
-    app.set('socket', socket);
-
     function reply(reply: FSA) {
       socket.emit('reply', JSON.stringify(reply));
     }
@@ -56,10 +56,28 @@ export default function setup(): void {
     socket.on('command', async (msg) => {
       const action = JSON.parse(msg) as FSA;
 
-      const { type } = action;
+      const {
+        type,
+        payload: { pin },
+      } = action;
 
       if (type in commands) {
         reply(await commands[type](action));
+      } else if (type in cbCommands) {
+        reply(
+          cbCommands[type](action, (value) => {
+            socket.emit(
+              'reply',
+              JSON.stringify({
+                type: 'digitalRead_reply',
+                payload: { pin, value },
+                meta: {
+                  date: new Date().toISOString(),
+                },
+              })
+            );
+          })
+        );
       } else {
         reply({
           ...action,
