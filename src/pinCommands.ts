@@ -13,7 +13,7 @@ import type {
 
 import { FSA, ErrorCodes } from './types.js';
 import { makeReply } from './actionBuilders.js';
-import { board } from './serverSetup.js';
+import { board } from './config.js';
 
 type ImmediateCommand<F extends FSA = FSA, Meta = any> = (
   action: F,

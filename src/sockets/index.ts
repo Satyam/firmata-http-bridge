@@ -6,7 +6,7 @@
 
 import { Server, Socket } from 'socket.io';
 
-import { app, http } from '../serverSetup.js';
+import { app, http } from '../config.js';
 import { FSA, ErrorCodes } from '../types.js';
 import {
   digitalRead,

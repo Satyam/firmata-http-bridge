@@ -13,7 +13,7 @@ import {
   Commands,
 } from '../pinCommands.js';
 
-import { app } from '../serverSetup.js';
+import { app } from '../config.js';
 
 const commands: Record<string, Commands> = {
   digitalRead,

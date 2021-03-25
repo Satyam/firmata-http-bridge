@@ -4,7 +4,7 @@
  * @module
  */
 import { validDigitalPin, validMode, validOutput } from '../utils.js';
-import { app, board } from '../serverSetup.js';
+import { app, board } from '../config.js';
 
 /**
  * Returns the HTML code for a nicely formatted object

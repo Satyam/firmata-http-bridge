@@ -1,6 +1,6 @@
 import extendJest from './jest-setup.util.js';
 
-import { board } from './serverSetup.js';
+import { board } from './config.js';
 
 import { pinMode, digitalWrite, digitalRead } from './pinCommands.js';
 import {

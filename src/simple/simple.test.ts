@@ -1,9 +1,8 @@
 import fetch from 'node-fetch';
 import Board from 'firmata';
 
-import config from '../config.js';
+import { config, board } from '../config.js';
 import { start, stop } from '../server.js';
-import { board } from '../serverSetup.js';
 
 const buildUrl = (...path: (string | number)[]): string =>
   `http://localhost:${config.HTTP_PORT}/${path.join('/')}`;

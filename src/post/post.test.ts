@@ -1,9 +1,8 @@
 import fetch from 'node-fetch';
 import Board from 'firmata';
 
-import config from '../config.js';
+import { config, board } from '../config.js';
 import { start, stop } from '../server.js';
-import { board } from '../serverSetup.js';
 
 import { FSA, ErrorCodes } from '../types.js';
 import {

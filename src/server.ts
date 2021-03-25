@@ -1,9 +1,8 @@
 import express from 'express';
 import path from 'path';
 
-import config from './config.js';
+import { config, board, app, http } from './config.js';
 
-import { board, app, http } from './serverSetup.js';
 import setupSimple from './simple/index.js';
 import setupPost from './post/index.js';
 import setupSockets from './sockets/index.js';

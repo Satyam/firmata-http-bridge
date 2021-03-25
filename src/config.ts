@@ -11,26 +11,56 @@
  * It may add some extra properties from the command line.
  * @module
  */
-import yargs from 'yargs';
+import { Command } from 'commander';
 import { config as envRead } from 'dotenv';
+
+import express from 'express';
+import { createServer } from 'http';
+// https://github.com/firmata/firmata.js/tree/master/packages/firmata.js
+import Board from 'firmata';
 
 envRead();
 
-const config = yargs(process.argv.slice(2))
-  .usage('Usage: node . [options]\n or: npm start -- [options] ')
-  .example('with node:', 'node . --HTTP_PORT=3000')
-  .example('with npm start:', 'npm start -- --HTTP_PORT=3000')
-  .options({
-    HTTP_PORT: {
-      type: 'number',
-      alias: 'hp',
-      default: parseInt(process.env.HTTP_PORT, 10) || 8000,
-    },
-    USB_PORT: {
-      type: 'string',
-      alias: 'up',
-      default: process.env.USB_PORT || '/dev/ttyACM0',
-    },
-  }).argv;
+// patch to prevent commander to parse options passed to jest
+const argv = process.argv.filter(
+  (part) => !['-w=1', '--coverage', '--silent'].includes(part)
+);
+
+const commander = new Command();
+
+commander
+  .description('Web server bridging commands to a microcontroller via Firmata')
+  .option(
+    '-hp, --HTTP_PORT <port>',
+    'Port number for web-server',
+    (value) => parseInt(value, 10),
+    parseInt(process.env.HTTP_PORT, 10) || 8000
+  )
+  .option(
+    '-up, --USB_PORT <device>',
+    'Communication port the controller is connected to',
+    process.env.USB_PORT || '/dev/ttyACM0'
+  )
+  .name(
+    `
+  node . [options]
+or: 
+  npm start -- [options]`
+  )
+  .addHelpText(
+    'after',
+    `
+Example:
+
+  with node:', 'node . --HTTP_PORT 3000
+  with npm start:', 'npm start -- --HTTP_PORT 3000`
+  )
+  .parse(argv);
+
+export const config = commander.opts();
+
+export const app = express();
+export const http = createServer(app);
+export const board = new Board(config.USB_PORT);
 
 export default config;
