@@ -10,7 +10,7 @@
     "build": "tsc",
     "postbuild": "cp src/expose__dirname.cjs dist",
     "test": "jest -w=1",
-    "coverage": "jest -w=1 --coverage",
+    "coverage": "jest -w=1 --coverage --silent",
     "docs": "typedoc src/**/*.ts src/*.ts",
     "inspect": "node --loader ts-node/esm --inspect-brk -- src/index.ts"
   },
