@@ -69,7 +69,7 @@ export default function setup(): void {
 
     board.pinMode(pin, mode);
 
-    res.send(`Pin ${pin} set to ${mode} mode`);
+    res.send(`Pin ${pin} set to mode ${mode}`);
   });
 
   app.get('/digitalWrite/:pin/:output', function (req, res) {

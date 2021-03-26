@@ -25,15 +25,19 @@ This package installs a web server which accepts several commands and sends them
     - [Settings](#settings)
   - [API](#api)
     - [HTTP GETs](#http-gets)
-      - [Firmata Version](#firmata-version)
-      - [Analog Pins](#analog-pins)
-      - [Digital Pins](#digital-pins)
+      - [GET Firmata Version](#get-firmata-version)
+      - [GET Analog Pins](#get-analog-pins)
+      - [GET Digital Pins](#get-digital-pins)
+      - [GET pinMode](#get-pinmode)
+      - [GET digitalWrite](#get-digitalwrite)
+      - [GET digitalRead](#get-digitalread)
       - [Public folder](#public-folder)
     - [HTTP POSTs](#http-posts)
       - [FSA](#fsa)
       - [pinMode](#pinmode)
       - [digitalWrite](#digitalwrite)
       - [digitalRead](#digitalread)
+    - [Sockets](#sockets)
 
 ## Installation
 
@@ -215,17 +219,21 @@ All commands should be sent to `http://localhost:8000` if run from the same mach
 
 ### HTTP GETs
 
-Most commands can be issued from the location bar on any browser, there is no need to do any programming. It is as if you were asking for a regular web page but the server reads the information from the URL and assembles the reply on the fly.
+Most commands can be issued from the location bar on any browser, there is no need to do any programming. It is as if you were asking for a regular web page but the server reads the information from the URL and assembles the reply on the fly.  
+
+It is not really practical for programming purposes, as the replies are simple text or html, which makes them harder to understand (that is *parse*) by a program. 
+
+Also, the commands implemented are very simple requiring at most two parameters.  If more options were to be needed, concatenating more and more parameters into the URL becomes a nightmare.  That is why, in some web sites, you see long URLs with very long strings of seemingly random characters.  Sometimes they are JSON-encoded objects containing the parameters which are then [Base64 encoded](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs#encoding_data_into_base64_format) or [url-encoded](https://www.w3schools.com/tags/ref_urlencode.ASP) to avoid conflicting characters, or some other means of packing all the parameters into a string, for example [Google Maps StreetView images](https://www.google.com/maps/@41.2430273,1.8120463,3a,75y,111.63h,88.29t/data=!3m7!1e1!3m5!1sceei56sWBpNMz0J9o64Ogg!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fpanoid%3Dceei56sWBpNMz0J9o64Ogg%26cb_client%3Dmaps_sv.tactile.gps%26w%3D203%26h%3D100%26yaw%3D232.36258%26pitch%3D0%26thumbfov%3D100!7i16384!8i8192)
 
 The parameters needed for each command are appended to the base URL, separated with forward slashes. Thus, the server responds in various ways:
 
-| URL | Response | Source |
-:- |: -----------| : -|
-|`http://localhost:8000` | web page located at `public/index.html` | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L53-L58)|
-|`http://localhost:8000/something.txt` | text file located at `public/something.txt`  | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L60-L65)|
-|`http://localhost:8000/dist/index.js` | Javascript file located at `dist/index.js` | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L34-L39)|
-|`http://localhost:8000/version` | HTML page assembled by the server with the reply to the `version` command send to the board.  | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L34-L36)|
-|`http://localhost:8000/digitalWrite/13/1` | HTML page assembled by the server with the reply to the `digitalWrite` of a `HIGH` on pin 13 command send to the board.  | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L75-L91)|
+| URL                                       | Response                                                                                                                | Source                                                                                           |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `http://localhost:8000`                   | web page located at `public/index.html`                                                                                 | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L53-L58)       |
+| `http://localhost:8000/something.txt`     | text file located at `public/something.txt`                                                                             | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L60-L65)       |
+| `http://localhost:8000/dist/index.js`     | Javascript file located at `dist/index.js`                                                                              | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L34-L39)       |
+| `http://localhost:8000/version`           | HTML page assembled by the server with the reply to the `version` command send to the board.                            | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L34-L36) |
+| `http://localhost:8000/digitalWrite/13/1` | HTML page assembled by the server with the reply to the `digitalWrite` of a `HIGH` on pin 13 command send to the board. | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L75-L91) |
 
 All those `app.get(url, ...)` calls tell the web server application `app` to listen for HTTP GET commands on the given URLs and respond with whatever content is required.  The second row in the table above is served by a wildcard URL `app.get('*', ...)` which is the fallback the end of the chain of choices.  The [Express](http://expressjs.com/) web server checks the received URLs against all those `app.get` in sequence, in the order they are found in the source code and branches off on the first match.  You have to list all those `app.get` in decreasing order of specificity, the most specific first and the `app.get('*')` as the very least, being the catch all for all the rest of the HTTP GET and if even that one fails, it will respond with the classic `404 Page not found`.
 
@@ -235,11 +243,13 @@ While the `version` command takes no parameters because it applies to the whole 
 
 You can get the values of those parameters via `req.param.pin` or `req.param.output` which are strings and thus need to be converted to actual numbers via `parseInt`.
 
-One final twist on parameters is the *optional* one such as in [`app.get('/digitalPins/:pin?', ...`](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L42).  The question mark at the end of the `/:pin?` indicates an optional parameter.
+One final twist on parameters is the *optional* one such as in [`app.get('/digitalPins/:pin?', ... ` ](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L42).  The question mark at the end of the `/:pin?` indicates an optional parameter.
 
-#### Firmata Version
+The HTTP GET commands are:
 
-`GET` on `http://localhost:8000/version` will return the version information of Firmata software running in the microcontroller board.  A typical response (on an Arduino with the most current version at the time or writing this) is:
+#### GET Firmata Version
+
+`GET` on `http://localhost:8000/version` will return the version information of Firmata software running in the microcontroller board.  A typical response (on an Arduino with the most current version at the time or writing this document) is:
 ```
 {
   "name": "StandardFirmata.ino",
@@ -250,7 +260,7 @@ One final twist on parameters is the *optional* one such as in [`app.get('/digit
 }
 ```
 
-#### Analog Pins
+#### GET Analog Pins
 
 `GET` on `http://localhost:8000/AnalogPins` will return an array with a list of pin numbers available for analog input.    A sample response might show: 
 ```
@@ -265,13 +275,13 @@ One final twist on parameters is the *optional* one such as in [`app.get('/digit
 ```
 This would mean, for example, that commands for the first available analog input port should go to physical pin 14.
 
-#### Digital Pins
+#### GET Digital Pins
 
 `GET` on `http://localhost:8000/DigitalPins` will return the number of digital pins available.  A sample reply might show:
 ```
 20
 ```
-It means that the board supports digital pins from 1 to 20.  Further information can then be requested for each individual pin, but issuing the same command followed by a slash and a number, for example `http://localhost:8000/DigitalPins/10` for pin 10 might show:
+It means that the board supports digital pins from 1 to 20.  Further information can then be requested for each individual pin, by issuing the same command followed by a slash and a number, for example `http://localhost:8000/DigitalPins/10` for pin 10 might show:
 
 ```
 {
@@ -283,6 +293,7 @@ It means that the board supports digital pins from 1 to 20.  Further information
 }
 ```
 The meaning of the `supportedModes` can be interpreted from this table:
+<a name="supported-modes" ></a>
 ```
   INPUT:    0,
   OUTPUT:   1,
@@ -301,7 +312,39 @@ The meaning of the `supportedModes` can be interpreted from this table:
 
 The current mode is shown under `mode`.  It will show nothing if not explicitly set.
 
-The `report` option is not currently supported so the value is not meaningful.
+The `report` option shows whether there is a subscription to read values from the pin or not.
+
+#### GET pinMode
+
+An HTTP GET on `http://localhost:8000/pinMode/2/11` will set pin 2 as an input with a pull up resistor.  The first parameter `2` is the pin number and the second `11` is the value from the [table above](#supported-modes).  The server would reply with:
+
+```
+Pin 2 set to mode 11
+```
+
+Or an error message either if the pin is not within the number of pins of the board or the mode is not one of the modes supported by that pin as reported by [`digitalPins`](#digital-pins).
+
+#### GET digitalWrite
+
+An HTTP GET on `http://localhost:8000/digitalWrite/13/1` would send the pin 13 (the built-in led in Arduino Uno) to HIGH, whatever the +V voltage might be on the board tried. It would respond with:
+
+```
+Pin 13 set to 1
+```
+
+Or an error message either if the pin is not a pin within the range of the board or the output is not a 0 or 1. (note to self, or others...: check the pin is set to OUTPUT and reply with a suitable error)
+
+#### GET digitalRead
+
+An HTTP GET on `http://localhost:8000/digitalRead/2` would read a single value from from pin 2.  It would reply with:
+
+```
+Pin 2 returned 1
+// or: 
+Pin 2 returned 0
+```
+
+Or an error message.
 
 #### Public folder
 
@@ -310,11 +353,17 @@ Any other request will return with the contents of the `public` folder.  Thus, t
 A request to `http://localhost:8000`  will return the file `public/index.html` which contains an example of remote access.
 A request to `http://localhost:8000/someFile.txt`  will return the file `public/someFile.txt` if there is any.
 
-If no such file is found, it will return with a 404 -- Not Found error.
+If no such file is found, it will return with a `404 -- Page Not Found` error.
 
-The existing `public/index.html` provides a means to try out the commands.  It contains one framed section for each of the commands, inputs for the parameters for each call and a `Send` button to send the command to the same server, which will act upon the microcontroller.  The reply will be shown on the right.
+The existing `public/index.html` provides a means to try out some sample commands. 
 
-Before reading or writing to any of the ports, remember to set the correct mode for the command.
+It also provides links to other files and folders in the server:
+
+* `dist/` is a folder containing the files compiled by the `npm run build` command. 
+* `docs/` links to `docs/index.html` which is generated by the `npm run docs` command, and links to all the API docs.
+* `coverage/` links to `coverage/index.html` which is generated by the `npm run coverage` command and links to the detailed coverage report for the tests.
+* `post.html` is an HTML file to try out the HTTP POST commands in the [next section](#http-posts).
+* `sockets.html` is an HTML file to try out the commands via *sockets* as shown in thein the [corresponding section](#sockets).
 
 ### HTTP POSTs
 
@@ -462,3 +511,4 @@ After setting the [`pinMode`](#pinmode) for input with pull up with: `http://loc
 ```
 
 
+### Sockets
