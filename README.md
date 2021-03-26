@@ -219,13 +219,13 @@ Most commands can be issued from the location bar on any browser, there is no ne
 
 The parameters needed for each command are appended to the base URL, separated with forward slashes. Thus, the server responds in various ways:
 
-| URL | Response | Source
-:-: | -----------:
-`http://localhost:8000` | web page located at `public/index.html` | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L53-L58)
-`http://localhost:8000/something.txt` | text file located at `public/something.txt`  | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L60-L65)
-`http://localhost:8000/dist/index.js` | Javascript file located at `dist/index.js` | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L34-L39)
-`http://localhost:8000/version` | HTML page assembled by the server with the reply to the `version` command send to the board.  | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L34-L36)
-`http://localhost:8000/digitalWrite/13/1` | HTML page assembled by the server with the reply to the `digitalWrite` of a `HIGH` on pin 13 command send to the board.  | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L75-L91)
+| URL | Response | Source |
+:- |: -----------| : -|
+|`http://localhost:8000` | web page located at `public/index.html` | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L53-L58)|
+|`http://localhost:8000/something.txt` | text file located at `public/something.txt`  | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L60-L65)|
+|`http://localhost:8000/dist/index.js` | Javascript file located at `dist/index.js` | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L34-L39)|
+|`http://localhost:8000/version` | HTML page assembled by the server with the reply to the `version` command send to the board.  | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L34-L36)|
+|`http://localhost:8000/digitalWrite/13/1` | HTML page assembled by the server with the reply to the `digitalWrite` of a `HIGH` on pin 13 command send to the board.  | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L75-L91)|
 
 All those `app.get(url, ...)` calls tell the web server application `app` to listen for HTTP GET commands on the given URLs and respond with whatever content is required.  The second row in the table above is served by a wildcard URL `app.get('*', ...)` which is the fallback the end of the chain of choices.  The [Express](http://expressjs.com/) web server checks the received URLs against all those `app.get` in sequence, in the order they are found in the source code and branches off on the first match.  You have to list all those `app.get` in decreasing order of specificity, the most specific first and the `app.get('*')` as the very least, being the catch all for all the rest of the HTTP GET and if even that one fails, it will respond with the classic `404 Page not found`.
 
