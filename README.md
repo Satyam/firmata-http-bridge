@@ -1,18 +1,18 @@
 # firmata-http-bridge
-Makes Firmata commands available through HTTP requests
+Makes Firmata commands available through a web server connected to the board.
 
-This is a work in progress, meant for didactical purposes.
+This is a work in progress meant as a teaching example and it is intentionally incomplete.
 
 Currently it just reads and writes digital ports.
 
 ## Description
 
-This package installs a web server which accepts several commands and sends them through the Firmata protocol to a connected microcontroler, such as an Arduino board.
+This package installs a web server which accepts several commands and sends them through the Firmata protocol to a supported microcontroler, such as an Arduino board.
 
 - [firmata-http-bridge](#firmata-http-bridge)
   - [Description](#description)
   - [Installation](#installation)
-  - [Commands](#commands)
+  - [`npm` Commands](#npm-commands)
     - [Install dependencies](#install-dependencies)
     - [Compilation](#compilation)
     - [Execute](#execute)
@@ -24,11 +24,12 @@ This package installs a web server which accepts several commands and sends them
   - [Configuration](#configuration)
     - [Settings](#settings)
   - [API](#api)
-    - [Firmata Version](#firmata-version)
-    - [Analog Pins](#analog-pins)
-    - [Digital Pins](#digital-pins)
-    - [Public folder](#public-folder)
-    - [Commands](#commands-1)
+    - [HTTP GETs](#http-gets)
+      - [Firmata Version](#firmata-version)
+      - [Analog Pins](#analog-pins)
+      - [Digital Pins](#digital-pins)
+      - [Public folder](#public-folder)
+    - [HTTP POSTs](#http-posts)
       - [FSA](#fsa)
       - [pinMode](#pinmode)
       - [digitalWrite](#digitalwrite)
@@ -36,7 +37,9 @@ This package installs a web server which accepts several commands and sends them
 
 ## Installation
 
-The package is not published to **npm** since it is not meant for production but to teach programming.  Thus, it is provided only as source code.
+This package expects [`NodeJS`](https://nodejs.org/) to be installed, which will also install [`npm`](https://www.npmjs.com/).
+
+The package is not published to **npm** since it is not meant for production but to teach programming a dedicated web server that serves as a bridge from arbitrary web clients (browsers) to a microcontroller.  Thus, it is provided only as source code.
 
 If you have [`git`](https://git-scm.com/) client installed, you can do:
 
@@ -47,16 +50,21 @@ cd firmata-http-bridge
 
 Otherwise you can download the ZIP file containing the code from: [https://github.com/Satyam/firmata-http-bridge/archive/main.zip](https://github.com/Satyam/firmata-http-bridge/archive/main.zip)
 
+However, if you plan to edit it and back it up on Github, it is better to have your own copy or *fork* to work with as the original cannot be changed except by the author.  In order to do that, in [GitHub](https://github.com/Satyam/firmata-http-bridge), on the top right corner, there is a button labeled `fork` with a number, which represents the number of copies of this repository made by others.  You can click on that button to get your own personal copy of it.  Then, to download this copy into your computer, you can do the following replacing the asterisks with your GitHub user name:
+
+```sh
+git clone https://github.com/****/firmata-http-bridge.git
+cd firmata-http-bridge
+```
+
+You cannot download a ZIP copy of this fork if you plan to upload your changes to the repository.  The ZIP download lacks the synchronization information git needs to keep track of changes.
 
 Once copied and/or expanded to a local drive, you must install dependencies and compile it before it is run, as described in the following section.
 
-## Commands
+## [`npm`](https://www.npmjs.com/) Commands
 
-This package expects [`NodeJS`](https://nodejs.org/) to be installed, which will also install [`npm`](https://www.npmjs.com/).
 
 All commands can be run within the directory where the package was installed, by default `firmata-http-bridge`.
-
-Please check the [configuration options](#configuration) before executing.
 
 ### Install dependencies
 
@@ -83,13 +91,15 @@ It will contain three types of files:
 
 * `*.js`: Plain JavaScript executable files.  These are the only ones needed in a production environment.
 * `*.js.map`: Map files used in debugging to associate each line in the `*.js` files to the original source code in the `*.ts` files. Debuggers handle this automatically.  They are not required in a production environment.
-* `*.d.ts`: type declaration files, they contain the type declarations extracted from the original `*.ts` without the actual code, which is now in the `*.js` files.  IDEs like VSCode use these files to provide code hints and type checking on the fly while using these files.
+* `*.d.ts`: type declaration files, they contain the type declarations extracted from the original `*.ts` without the actual code, which is now in the `*.js` files.  IDEs like VSCode use these files to provide code hints and type checking on the fly while editing.
 
-It will also add a few files to the `public/` folder, which are the non-TypeScript versions of their namesakes, with a `.js` extension instead of the `.ts` extension of TypeScript files.  If the original files feel cumbersome, these two are plain JavaScript.  There will also be files with `.d.ts` extensions where all the type declarations get extracted.
+If the original TypeScript files feel cumbersome, the `dist/*.js` files are plain JavaScript.  
 
 ### Execute
 
-Once installed and compiled, you may run the package in node with:
+Please check the [configuration options](#configuration) before executing.
+
+Once installed and compiled, as indicated the sections above, you may run the package in node with:
 
 ```
 node .
@@ -133,7 +143,7 @@ npm t
 
 Unit tests are meant to ensure that if you change the code, current behavior is maintained.  Tests should also be expanded to cover new features or added to uncover hidden bugs (usually to test unexpected behavior reported by end users).
 
-The current tests were written for an Arduino Uno board.  Many will fail if used with another board or if a board is not actually connected.  In this sense, they are *integration tests* rather than *unit tests* which would usually resort to *mocks* for Firmata instead of the real thing.
+The current tests were written for an [Arduino Uno](https://store.arduino.cc/arduino-uno-rev3) board.  Many will fail if used with another board or if a board is not actually connected.  In this sense, they are *integration tests* rather than *unit tests* which would usually resort to *mocks* for Firmata instead of the real thing.
 
 ### Coverage
 
@@ -143,7 +153,7 @@ It measures how well the tests cover all the possibilities of the app.  100% cov
 npm run coverage
 ```
 
-To know what parts of the code are not covered by the tests, once the command is run, a folder `coverage` is created.  You can browse the `index.html` file which will show each of the files tested and highlight in color the parts that have never been tested. This allows for further tests to be added to cover those cases.
+It will provide a summary once it has run all the tests successfully. To know which parts of the code are not covered by the tests, once the command is run, a folder `coverage` is created.  You can browse the `coverage/index.html` file which will show each of the files tested and highlight in color the parts that have never been tested. This allows for further tests to be added to cover those cases.
 
 ### Documentation
 
@@ -155,11 +165,13 @@ npm run docs
 
 A folder called `docs` will be created.  Open the file `docs/index.html` with any browser and it will provide the documentation for this package.
 
-Documentation comments (usually called *doc comments*) can be found in the source files, they are the comments started with `/**`.
+Documentation comments (usually called *doc-comments*) can be found in the source files, they are the comments started with `/**`.
 
-Keeping the documentation updated in parallel with the code has always been an issue. The idea is that, if you can generate part of the documentation from the code itself, making the documentation is much easier. By adding a few doc comments along the code, it is easier to update the docs when and if you update the code. The words starting with an `@` are keywords, whose meaning can be found in the [JsDoc](https://jsdoc.app/) documentation, which became the most popular such API documentation generator, but does not deal with TypeScript.  That is why I used [TypeDoc](https://typedoc.org/).
+Keeping the documentation updated in parallel with the code has always been an issue. The idea is that, if you can generate part of the documentation from the code itself, making the documentation is much easier. By adding a few doc-comments along the code, it is easier to update the docs when and if you update the code. The words starting with an `@` are keywords, whose meaning can be found in the [JsDoc](https://jsdoc.app/) documentation, which became the most popular such API documentation generator, but does not deal with TypeScript.  That is why I used [TypeDoc](https://typedoc.org/).  
 
-Documentation generators don't always get it right.  They get a lot of information from the TypeScript types but sometimes they get confused but, overall, they do a good job.
+TypeScript actually provides lots of documentation on its own, even without any doc-comments.  With descriptive identifier names and type declarations in TypeScript, much can be learned right away.
+
+Documentation generators don't always get it right. Sometimes they get confused but, overall, they do a good job.
 
 ## Configuration
 
@@ -189,11 +201,43 @@ USB_PORT=/dev/ttyACM1
   
 ## API
 
+API stands for Application Programming Interface and, with a web server, it is represented by the type of the communication in between clients and server and the format of the messages in between them.
+
+This server supports three ways of communication.
+
+1. [HTTP gets with textual responses](#http-gets)
+2. [HTTP posts with FSA message](#http-posts)
+3. [Sockets with FSA message](#sockets)
+
+The web server is also configured to serve the example pages that use these APIs.  It also allows clients to access the helper functions to be used in the client.
+
 All commands should be sent to `http://localhost:8000` if run from the same machine (*`localhost`*).  The port can be the default `8000` or whatever was [configured](#configuration).
 
-Some commands can be issued from the location bar on any browser. Those are listed below under the `GET` method. The only `POST` command can be only used programmatically.
+### HTTP GETs
 
-### Firmata Version
+Most commands can be issued from the location bar on any browser, there is no need to do any programming. It is as if you were asking for a regular web page but the server reads the information from the URL and assembles the reply on the fly.
+
+The parameters needed for each command are appended to the base URL, separated with forward slashes. Thus, the server responds in various ways:
+
+| URL | Response | Source
+:-: | -----------:
+`http://localhost:8000` | web page located at `public/index.html` | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L53-L58)
+`http://localhost:8000/something.txt` | text file located at `public/something.txt`  | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L60-L65)
+`http://localhost:8000/dist/index.js` | Javascript file located at `dist/index.js` | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L34-L39)
+`http://localhost:8000/version` | HTML page assembled by the server with the reply to the `version` command send to the board.  | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L34-L36)
+`http://localhost:8000/digitalWrite/13/1` | HTML page assembled by the server with the reply to the `digitalWrite` of a `HIGH` on pin 13 command send to the board.  | [:octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L75-L91)
+
+All those `app.get(url, ...)` calls tell the web server application `app` to listen for HTTP GET commands on the given URLs and respond with whatever content is required.  The second row in the table above is served by a wildcard URL `app.get('*', ...)` which is the fallback the end of the chain of choices.  The [Express](http://expressjs.com/) web server checks the received URLs against all those `app.get` in sequence, in the order they are found in the source code and branches off on the first match.  You have to list all those `app.get` in decreasing order of specificity, the most specific first and the `app.get('*')` as the very least, being the catch all for all the rest of the HTTP GET and if even that one fails, it will respond with the classic `404 Page not found`.
+
+The responses are sent via the `res.send` for textual or HTML pages assembled on the fly or by `res.sendFile` when we mean to send a static file.  The `path` to the file to be send is taken from the request `req` which is resolved to the path given in the `root` option to `res.sendFile`. 
+
+While the `version` command takes no parameters because it applies to the whole board, other commands as the `digitalWrite`, the last one on the table above, requires a `pin` and an `output` value to be send to the board.  These extra parameters are specified by the colons in the URL path:  [`app.get('/digitalWrite/:pin/:output, ....`](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L75).  This means that the `pin` and `output` appear as *folders* in the URL path.  
+
+You can get the values of those parameters via `req.param.pin` or `req.param.output` which are strings and thus need to be converted to actual numbers via `parseInt`.
+
+One final twist on parameters is the *optional* one such as in [`app.get('/digitalPins/:pin?', ...`](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L42).  The question mark at the end of the `/:pin?` indicates an optional parameter.
+
+#### Firmata Version
 
 `GET` on `http://localhost:8000/version` will return the version information of Firmata software running in the microcontroller board.  A typical response (on an Arduino with the most current version at the time or writing this) is:
 ```
@@ -206,7 +250,7 @@ Some commands can be issued from the location bar on any browser. Those are list
 }
 ```
 
-### Analog Pins
+#### Analog Pins
 
 `GET` on `http://localhost:8000/AnalogPins` will return an array with a list of pin numbers available for analog input.    A sample response might show: 
 ```
@@ -221,7 +265,7 @@ Some commands can be issued from the location bar on any browser. Those are list
 ```
 This would mean, for example, that commands for the first available analog input port should go to physical pin 14.
 
-### Digital Pins
+#### Digital Pins
 
 `GET` on `http://localhost:8000/DigitalPins` will return the number of digital pins available.  A sample reply might show:
 ```
@@ -259,7 +303,7 @@ The current mode is shown under `mode`.  It will show nothing if not explicitly 
 
 The `report` option is not currently supported so the value is not meaningful.
 
-### Public folder
+#### Public folder
 
 Any other request will return with the contents of the `public` folder.  Thus, the server can respond like a regular web server.  
 
@@ -272,7 +316,7 @@ The existing `public/index.html` provides a means to try out the commands.  It c
 
 Before reading or writing to any of the ports, remember to set the correct mode for the command.
 
-### Commands
+### HTTP POSTs
 
 There are two mechanism to send commands to the microcontroller, via a web browser or programmatically.
 
