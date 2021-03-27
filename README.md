@@ -34,6 +34,7 @@ This package installs a web server which accepts several commands and sends them
       - [Public folder](#public-folder)
     - [HTTP POSTs](#http-posts)
       - [FSA](#fsa)
+      - [Fetch API](#fetch-api)
       - [pinMode](#pinmode)
       - [digitalWrite](#digitalwrite)
       - [digitalRead](#digitalread)
@@ -217,13 +218,15 @@ The web server is also configured to serve the example pages that use these APIs
 
 All commands should be sent to `http://localhost:8000` if run from the same machine (*`localhost`*).  The port can be the default `8000` or whatever was [configured](#configuration).
 
+There will be references to the bits of code relevant to the part being explained, signaled by the *octocat* [ :octocat: ](https://github.com/Satyam/firmata-http-bridge) emoji, which is the emoji for GitHub, where the code resides.   The references usually point to highlighted pieces of code.  However, as the code may change, the lines pointed out might move around and the highlight might get offset.  If so, please file an issue in GitHub Issues [ :octocat: ](https://github.com/Satyam/firmata-http-bridge/issues/new) so it can get fixed.
+
 ### HTTP GETs
 
 Most commands can be issued from the location bar on any browser, there is no need to do any programming. It is as if you were asking for a regular web page but the server reads the information from the URL and assembles the reply on the fly.  
 
-It is not really practical for programming purposes, as the replies are simple text or html, which makes them harder to understand (that is *parse*) by a program. 
+It is not really practical for programming purposes, as the replies are simple text or html, which makes them easier for people to read but harder to understand (that is *parse*) by a program. 
 
-Also, the commands implemented are very simple requiring at most two parameters.  If more options were to be needed, concatenating more and more parameters into the URL becomes a nightmare.  That is why, in some web sites, you see long URLs with very long strings of seemingly random characters.  Sometimes they are JSON-encoded objects containing the parameters which are then [Base64 encoded](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs#encoding_data_into_base64_format) or [url-encoded](https://www.w3schools.com/tags/ref_urlencode.ASP) to avoid conflicting characters, or some other means of packing all the parameters into a string, for example [Google Maps StreetView images](https://www.google.com/maps/@41.2430273,1.8120463,3a,75y,111.63h,88.29t/data=!3m7!1e1!3m5!1sceei56sWBpNMz0J9o64Ogg!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fpanoid%3Dceei56sWBpNMz0J9o64Ogg%26cb_client%3Dmaps_sv.tactile.gps%26w%3D203%26h%3D100%26yaw%3D232.36258%26pitch%3D0%26thumbfov%3D100!7i16384!8i8192)
+Also, the commands implemented are very simple requiring at most two parameters.  If more options were to be needed, concatenating more and more parameters into the URL becomes a nightmare.  That is why, in some web sites, you see URLs with very long strings of seemingly random characters.  Sometimes they are JSON-encoded objects containing the parameters which are then [Base64 encoded](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs#encoding_data_into_base64_format) or [url-encoded](https://www.w3schools.com/tags/ref_urlencode.ASP) to avoid conflicting characters, or some other means of packing all the parameters into a string, for example [Google Maps StreetView images](https://www.google.com/maps/@41.2430273,1.8120463,3a,75y,111.63h,88.29t/data=!3m7!1e1!3m5!1sceei56sWBpNMz0J9o64Ogg!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fpanoid%3Dceei56sWBpNMz0J9o64Ogg%26cb_client%3Dmaps_sv.tactile.gps%26w%3D203%26h%3D100%26yaw%3D232.36258%26pitch%3D0%26thumbfov%3D100!7i16384!8i8192)
 
 The parameters needed for each command are appended to the base URL, separated with forward slashes. Thus, the server responds in various ways:
 
@@ -249,7 +252,7 @@ The HTTP GET commands are:
 
 #### GET Firmata Version
 
-`GET` on `http://localhost:8000/version` will return the version information of Firmata software running in the microcontroller board.  A typical response (on an Arduino with the most current version at the time or writing this document) is:
+`GET` on `http://localhost:8000/version` will return the version information of Firmata software running in the microcontroller board [ :octocat: ](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L34-L36). A typical response (on an Arduino with the most current version at the time or writing this document) is:
 ```
 {
   "name": "StandardFirmata.ino",
@@ -262,7 +265,7 @@ The HTTP GET commands are:
 
 #### GET Analog Pins
 
-`GET` on `http://localhost:8000/AnalogPins` will return an array with a list of pin numbers available for analog input.    A sample response might show: 
+`GET` on `http://localhost:8000/AnalogPins` will return an array with a list of pin numbers available for analog input [ :octocat: ](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L38-L40).    A sample response might show: 
 ```
  [
   14,
@@ -277,7 +280,7 @@ This would mean, for example, that commands for the first available analog input
 
 #### GET Digital Pins
 
-`GET` on `http://localhost:8000/DigitalPins` will return the number of digital pins available.  A sample reply might show:
+`GET` on `http://localhost:8000/DigitalPins` will return the number of digital pins available [ :octocat: ](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L42-L55).  A sample reply might show:
 ```
 20
 ```
@@ -316,7 +319,7 @@ The `report` option shows whether there is a subscription to read values from th
 
 #### GET pinMode
 
-An HTTP GET on `http://localhost:8000/pinMode/2/11` will set pin 2 as an input with a pull up resistor.  The first parameter `2` is the pin number and the second `11` is the value from the [table above](#supported-modes).  The server would reply with:
+An HTTP GET on `http://localhost:8000/pinMode/2/11` will set pin 2 as an input with a pull up resistor [ :octocat: ](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L57-L68).  The first parameter `2` is the pin number and the second `11` is the value from the [table above](#supported-modes).  The server would reply with:
 
 ```
 Pin 2 set to mode 11
@@ -326,7 +329,7 @@ Or an error message either if the pin is not within the number of pins of the bo
 
 #### GET digitalWrite
 
-An HTTP GET on `http://localhost:8000/digitalWrite/13/1` would send the pin 13 (the built-in led in Arduino Uno) to HIGH, whatever the +V voltage might be on the board tried. It would respond with:
+An HTTP GET on `http://localhost:8000/digitalWrite/13/1` would send the pin 13 (the built-in led in Arduino Uno) to HIGH, whatever the +V voltage might be on the board tried [ :octocat: ](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L75-L91). It would respond with:
 
 ```
 Pin 13 set to 1
@@ -336,7 +339,7 @@ Or an error message either if the pin is not a pin within the range of the board
 
 #### GET digitalRead
 
-An HTTP GET on `http://localhost:8000/digitalRead/2` would read a single value from from pin 2.  It would reply with:
+An HTTP GET on `http://localhost:8000/digitalRead/2` would read a single value from from pin 2 [ :octocat: ](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L93-L112).  It would reply with:
 
 ```
 Pin 2 returned 1
@@ -350,8 +353,8 @@ Or an error message.
 
 Any other request will return with the contents of the `public` folder.  Thus, the server can respond like a regular web server.  
 
-A request to `http://localhost:8000`  will return the file `public/index.html` which contains an example of remote access.
-A request to `http://localhost:8000/someFile.txt`  will return the file `public/someFile.txt` if there is any.
+A request to `http://localhost:8000`  will return the file `public/index.html` which contains an example of remote access [ :octocat: ](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L53-L58).
+A request to `http://localhost:8000/someFile.txt`  will return the file `public/someFile.txt` if there is any [ :octocat: ](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L60-L65). In general, any request not fulfilled by any of the previous paths, will be tried on the `public/` folder.
 
 If no such file is found, it will return with a `404 -- Page Not Found` error.
 
@@ -359,36 +362,62 @@ The existing `public/index.html` provides a means to try out some sample command
 
 It also provides links to other files and folders in the server:
 
-* `dist/` is a folder containing the files compiled by the `npm run build` command. 
-* `docs/` links to `docs/index.html` which is generated by the `npm run docs` command, and links to all the API docs.
-* `coverage/` links to `coverage/index.html` which is generated by the `npm run coverage` command and links to the detailed coverage report for the tests.
+* `dist/` is a folder containing the files compiled by the `npm run build` command.  [ :octocat: ](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L34-L39)
+* `docs/` links to `docs/index.html` which is generated by the `npm run docs` command, and links to all the API docs. [ :octocat: ](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L41-L46)
+* `coverage/` links to `coverage/index.html` which is generated by the `npm run coverage` command and links to the detailed coverage report for the tests. [ :octocat: ](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.ts#L47-L52)
 * `post.html` is an HTML file to try out the HTTP POST commands in the [next section](#http-posts).
-* `sockets.html` is an HTML file to try out the commands via *sockets* as shown in thein the [corresponding section](#sockets).
+* `sockets.html` is an HTML file to try out the commands via *sockets* as shown in the [corresponding section](#sockets).
 
 ### HTTP POSTs
 
-There are two mechanism to send commands to the microcontroller, via a web browser or programmatically.
+As mentioned before, using HTTP GET has the problem of the size of the URL that can be sent safely.  Originally there was a 2kByte limit but most browsers now support [longer URLs](https://stackoverflow.com/questions/812925/what-is-the-maximum-possible-length-of-a-query-string) and different servers also have their limits. 
 
-The programmatic way, via the web [`Fetch API`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) will be covered elsewhere (*pending*).  The `public/index.html` file can serve as an example of this.
+Using HTTP GET also brings the issue of confusing URLs for the user.  So far, the commands we've issued for Firmata are short and clear enough, not so for other applications, as already mentioned.
 
-The commands below can be sent via the browser at the indicated URLs.
+The solution has always been there.  Use HTTP POST.  The data part of the request goes into the body of the HTTP message, not along the URL. It doesn't need to be encoded to avoid confusing the URL parser, after all, a URL has a very specific syntax and you don't want to get any of your parameters to be misunderstood for something else. And, crucially, it can be any length and any format you want. Since it goes into the body of the request, it can use the same format as the response that also goes in the body of the reply.
 
-All the commands are internally sent as a [Flux Standard Action](https://github.com/redux-utilities/flux-standard-action#flux-standard-action) or **FSA** and so are the possible replies.
+Thus, it allows us to use JSON for both request and reply.
+
+We could assemble an ad-hoc format for each and every message, but it is easier if we can recognize some patterns within every message, that can help us standardize it.  A message will, in general, have the following parts:
+
+* The *type* of message.  It states what is this all about. Furthermore, is it a request or a reply?
+* The *body* of the message, the actual information we are carrying.  What are we requesting, what is our reply.
+* The *error* information, if there is any.  
+* Any *extra* information.  
+
+This is what the **FSA** message format provides.
 
 #### FSA
 
-FSA is a message format to transmit *actions* to be performed.  The Firmata protocol uses MIDI because it is very compact and thus suitable for devices with very little processing resources.  However, in the web environment, both clients and servers have plenty of resources and the transmission networks have high bandwidth, thus, a more verbose protocol, much easier to produce and read, is preferred which is much less prone to errors and easier to debug.
+[FSA](https://www.npmjs.com/package/flux-standard-action), for *Flux Standard Action*, is a message format to transmit *actions* to be performed.  The Firmata protocol uses MIDI because it is very compact and thus suitable for devices with very little processing resources.  However, in the web environment, both clients and servers have plenty of resources and the transmission networks have high bandwidth, thus, a more verbose protocol, much easier to produce and read, is preferred which is much less prone to errors and easier to debug since it is human-readable. Compact, bit-oriented protocols, like MIDI, are harder to debug because you have to break up the bytes into different bit groups.
 
-The FSA is a JavaScript object containing the following properties:
+We adopted the following convention:
 
 * `type`: a string specifying the action requested or replied to.  This is the only mandatory field.
 * `payload`: an object containing the parameters required for the requested action, as properties.
 * `meta`: additional information not directly related to the action
 * `error`: an object containing a numerical `code` and a human readable `msg`.
   
-The actual standard is somewhat lax in what the last three, optional, properties might be.  They can all be simple values (for example, if the action requires just one parameter, the `payload` might contain its value instead of an object with a property containing its value).  The format presented above is the one we adopted for this app.
+The actual standard is somewhat lax in what the last three, optional, properties might be.  They can all be simple values (for example, if the action requires just one parameter, the `payload` might contain its value instead of an object with a property containing its value). In the standard, the `error` property must be a boolean, with the error detail in the `payload`, but that would either replace the parameters, which are important to determine what the error is about, or mix up with them, making it somewhat confusing.   The format presented above is the one we adopted for this app.
 
 Being a JavaScript object, an FSA is easy to transmit as a JSON string both for commands and replies.
+
+#### Fetch API
+
+To send and receive HTTP messages from a web client, the most standard way is the [`Fetch API`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API), which is available in almost all modern browser, or can be *polyfilled* in others.  It can also be used in servers communicating with other servers.
+
+Other non-standard solutions like the very popular [axios](https://www.npmjs.com/package/axios) which works in all browsers or [jQuery](https://api.jquery.com/category/ajax/) which was the obvious option if you were already using jQuery.
+
+Since we will always be receiving JSON via HTTP POST, to a specific virtual *folder* on the server, the functionality on the client side is condensed into the [`postCommand` :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/public/post.html#L115-L120) function.  This command sends a POST to `http://localhost:8000/command` with the FSA message *stringified* into the body, and expects the reply to also be in JSON, which it decodes via `res.json()`. (`req` and `res` are common short names for *request* and *response*, this last name being preferred over `reply` because `req` and `rep` are too similar).
+
+Fetching something from a server is an *asynchronous* operation, meaning that you don't know when the reply might arrive, even at its fastest, which might seem instantaneous to a user, it takes ages for a program.  Thus, the `Fetch` request returns a [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) which is a standard object in most browsers and can be *polyfilled* in Internet Explorer, the only one that doesn't have it.
+
+On the server side, the request from the client is handled [here :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/post/index.ts#L36-L52).  Instead of an `app.get()` call as we had before, we now use an `app.post('/command', ... ` meaning we will respond to HTTP POST messages sent to the `/command` virtual path.  The FSA is already decoded from the `res.body` of the message and we use the `type` part of the FSA to call a function of the same name as the action.  We then wait for the return value of that function and send it back to the client with `res.json()` instead of `res.send()` as we did before. The latter expected text (plain or HTML) which the former expects and object which it serializes it into JSON and puts it in the body of the reply.
+
+
+In the following list, the commands will be represented by their FSA messages as will the replies, counting on a function such as `postCommand`, discussed above, to send it and wait for the reply.
+
+
 
 
 #### pinMode
