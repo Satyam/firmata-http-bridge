@@ -43,6 +43,9 @@ This package installs a web server which accepts several commands and sends them
       - [digitalReadSubscribe](#digitalreadsubscribe)
       - [digitalRead_reply](#digitalread_reply)
       - [digitalReadUnsubscribe](#digitalreadunsubscribe)
+  - [Tests](#tests)
+    - [Types of tests](#types-of-tests)
+    - [Structure of a test.](#structure-of-a-test)
 
 ## Installation
 
@@ -65,6 +68,8 @@ However, if you plan to edit it and back it up on Github, it is better to have y
 git clone https://github.com/****/firmata-http-bridge.git
 cd firmata-http-bridge
 ```
+
+There is a step by step guide on how to [*fork* a repository](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo) in the GitHub docs which goes through all the steps.
 
 You cannot download a ZIP copy of this fork if you plan to upload your changes to the repository.  The ZIP download lacks the synchronization information git needs to keep track of changes.
 
@@ -648,3 +653,87 @@ The [digitalReadUnsubscribe :octocat:](https://github.com/Satyam/firmata-http-br
 ```
 No further [`digitalRead_reply`](#digitalread_reply) messages will be received at the client unless a `digitalRead` command is sent (which is still available) or a new read subscription is made.
 
+## Tests
+
+There is a good set of test files, identified by their double extension `.test.ts`.  Thus. for `server.ts` we have `server.test.ts`.  They all use [Jest](https://jestjs.io/) and are launched by both the `npm t` command and the `npm run coverage` which runs the tests but monitoring which parts of the code are being executed and thus produce a coverage report, as indicated [above](#npm-commands).
+
+There are meant to try out all aspects of your code, both the good and the bad.  You test both for the good responses and also for the bad outcomes so that you are sure the app is capable of detecting an error and reporting it properly.
+
+Tests also allow you to test things that would be hard to try out manually.  It is easy to test the [GET commands](#http-gets), because you can write the URL for the *get* right in the browser navigation bar, but it is not so easy to tests POSTs or Sockets, since they require some code to be run.
+
+A test is also a sort of specification.  Your test estates what your app should do, and makes sure it does it consistently. Over time, the application might change significantly.  Files moved around, optimized, bugs fixed, and you want to make sure that all along the process, nothing breaks.
+
+They are also great when responding to bug reports filed by users.  If a report says that an error happens when you do such and such sequence, you can write a brief test with that specific sequence and verify that the error is indeed there, as reported.  That gives you a sort of benchmark to work with and dig deep into the code and see what went wrong.  Once the fault is found, it can be fixed and then the tests run again to check not only that the reported bug is gone but that, by adding a fix, nothing else got broken.
+
+Tests are so important that developers put badges in the library catalogs like npm, for example, the  [axios](https://www.npmjs.com/package/axios) package shows, right after the title a set of gray and green, or gray and orange badges for various tests that it has passed.  For example, there is a gray and green badge for *coverage* which, as of this writing, shows a 94%.  This, of course, also means that it passes all the tests, as the coverage reporter would only produce a report on a complete test.  You can actually click on many of those badges and see a more detailed view of what was covered in those tests.
+
+Where do those badges come from?  There are CI/CD servers, *Continuous Integration/Continuous Delivery* services, many of them public and free just as GitHub or npm (and in case you are wondering, npm is a brand and is written all lowercase). You can configure your GitHub repository to link to one of these sites and it will trigger a re-run of the tests for you automatically in their servers.  The result will be a badge you can link to. The badge is not static, it is generated on the fly by the service based on the result of the latest tests.  And they are often a factor in deciding whether to use a particular package or not.
+
+The best part about those services is that none of the developers can get away with bad code.  As a team leader you might ask your team to always run tests on the code before uploading it to GitHub.  Some might fail to do so for all sorts of reasons.  But with the CI/CD service configured, no matter whether the individual developer does run a test or not, the server itself will do it.  There is no way to avoid it.
+
+Firmata has some badges in its [`readme.md`](https://github.com/firmata/firmata.js#firmatajs) which show some issues with some bug fixes that have not succeeded but it has 100% coverage, which is good.
+
+### Types of tests
+
+Tests can be *Unit Tests* or *Integration Tests* (besides various other categories).  In a Unit Test, you try out each and every module, every function within each module, instantiate every class and test every method within it.  You bombard every function with all combinations of parameters and even absurd values and check that their response is as expected.
+
+However, some functions might need to reach other resources beyond the function itself.  For example, this app itself is meant to control an actual microcontroller board.  In Unit Tests you want to avoid this kind of dependency, after all, your CI/CD service will not have an Arduino connected to their servers to run your tests.  That is why you can use *mocks*, pieces of code that mimic the behavior of whatever it is that you are testing.
+
+To do unit testing on this app, we cannot mock the microcontroller board because it is a piece of hardware outside of our computer so we cannot run a software-only emulator.  We could emulate the Firmata library itself, since it runs within the computer and it is just a piece of software.
+
+The problem is that I don't fully understand and trust the Firmata library.  The documentation is a bit scarce so I wasn't sure what its behavior might be.  So, I opted for an Integration Test.
+
+An Integration Test goes all the way from end to end.  It tests the app as a whole, trying out its public interfaces and checking its responses with everything connected.  In this case, I tested it on an Arduino Uno board.
+
+Thus, for example, there is no `actionBuilders.test.ts` file, however, by doing integration tests, the code in `actionBuilders.ts` has been almost fully tested, just because they were called by other tests.
+
+### Structure of a test.
+
+We will use the [`pinCommands.test.ts` :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/pinCommands.test.ts) as a sample.  This is called a *test suite*, that is, a collection of related individual tests.  So, there is not just a big tests, there can be dozens or hundreds of individual tests, grouped into *suites*.
+
+After importing the various pieces we need to perform the tests, we do some [basic setup :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/pinCommands.test.ts#L19-L35).  Jest makes available automatically some functions that register some code to run at specific times:
+
+* `beforeAll`  runs once before any test,
+* `afterAll` runs once after all tests have been run and
+* `afterEach` runs multiple times, once after each individual test.
+  
+There is obviously a `beforeEach` as well, but we didn't have a need for that one.
+
+Then, you start grouping your tests with `describe` calls in any way you want.  `describe` is not required and only serves to get your individual tests organized and to provide a descriptive message if anyone fails.  
+
+For example, for the [`digitalWrite` :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/pinCommands.test.ts#L69-L109) function, we have tests to check when it is set high, when it is set low, when we give an incorrect pin number and when we try to set the output to an invalid value (not 0 nor 1).
+
+Tests are actually performed by the functions registered via the `test` function.  It takes a descriptive text, to help the developer locate a failed test, and a function that runs the test.
+
+For [`pin High` :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/pinCommands.test.ts#L70-L78) we set the pin to output mode, using the `pinMode` function we tested in the previous lines.  We then use `digitalWriteActionBuilder` to build the FSA for the `digitalWrite` action. We then call [`digitalWrite` :octocat:](digitalWriteActionBuilder) with the `writeHigh` FSA we have just built.  This line is particularly important so we'll analyze it in detail:
+
+```js
+expect(digitalWrite(writeHigh)).toBeFSAReply(writeHigh);
+```
+
+We call the `expect` function, which is a Jest global function just as `describe` or the `beforeXxxx` and `afterXxx` functions. This function allows us to tell the test what is it that we expect.  Then we call `digitalWrite(writeHigh)` with the FSA we built a couple of lines before.  That function will return with an FSA and it is that returned FSA which we *expect* it *to be and FSA reply* based on the original FSA.  
+
+This whole line can be read
+
+> expect the return value of calling `digitalWrite` with the `writeHigh` FSA to be an FSA derived from that same FSA.
+
+The reply FSA to a `digitalWrite` is the same `type` with the text `_reply` appended, and a `meta.date` property set to a valid date.
+
+So, if this expectation is fulfilled, the test passes.
+
+Does Jest have checks specific for FSAs?  Not really, but you can extend the testing library with your own tests and once a group of tests is repeated over and over, you are likely to extend it on your own to make your life easier.  Both `toBeFSAReply` and `toHaveErrorCode` are extensions created for this set of tests.
+
+Jest provides a whole set of various [expectations](https://jestjs.io/docs/expect), such as those used on the lines before and after the line we analyzed. 
+
+```js
+expect(board.pins[LED_BUILTIN].value).toEqual(board.LOW);
+expect(digitalWrite(writeHigh)).toBeFSAReply(writeHigh);
+expect(board.pins[LED_BUILTIN].value).toEqual(board.HIGH);
+```
+In the top and bottom lines above, we tell Jest to check on the board status for the pin we are testing, first expecting it to be equal to `board.LOW` and, once we set it high, to `board.HIGH`.
+
+In another test we check for an error reply to a [bad pin :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/pinCommands.test.ts#L90-L98).  In this case, we build an FSA with an outrageous pin number and expect the reply to be a proper FSA and to have an error code of `ErrorCodes.BAD_PIN`.
+
+In tests such as [`server.test.ts` :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.test.ts) or [`simple.test.ts` :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/simple.test.ts) we actually start the server and use a slightly modified version of `postCommand` to send actual HTTP request to that server, thus fully testing the app from end to end.
+
+Not everything has tests, though it can and should.  I meant to do all the tests but then, it is interesting to show how the coverage report show the code that has no tests.  Thus, I left it for homework. It is also interesting to make a test fail, by messing up with an expectation and see how a bad test is reported.
