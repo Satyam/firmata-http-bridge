@@ -35,10 +35,14 @@ This package installs a web server which accepts several commands and sends them
     - [HTTP POSTs](#http-posts)
       - [FSA](#fsa)
       - [Fetch API](#fetch-api)
-      - [pinMode](#pinmode)
-      - [digitalWrite](#digitalwrite)
-      - [digitalRead](#digitalread)
+      - [POST pinMode](#post-pinmode)
+      - [POST digitalWrite](#post-digitalwrite)
+      - [POST digitalRead](#post-digitalread)
     - [Sockets](#sockets)
+      - [Socket.io](#socketio)
+      - [digitalReadSubscribe](#digitalreadsubscribe)
+      - [digitalRead_reply](#digitalread_reply)
+      - [digitalReadUnsubscribe](#digitalreadunsubscribe)
 
 ## Installation
 
@@ -376,9 +380,9 @@ Using HTTP GET also brings the issue of confusing URLs for the user.  So far, th
 
 The solution has always been there.  Use HTTP POST.  The data part of the request goes into the body of the HTTP message, not along the URL. It doesn't need to be encoded to avoid confusing the URL parser, after all, a URL has a very specific syntax and you don't want to get any of your parameters to be misunderstood for something else. And, crucially, it can be any length and any format you want. Since it goes into the body of the request, it can use the same format as the response that also goes in the body of the reply.
 
-Thus, it allows us to use JSON for both request and reply.
+Thus, it allows us to use stringified JSON for both request and reply.
 
-We could assemble an ad-hoc format for each and every message, but it is easier if we can recognize some patterns within every message, that can help us standardize it.  A message will, in general, have the following parts:
+We could assemble an ad-hoc format for each and every message, but, if we can recognize some pattern within every message, it can help us standardize it.  A message will, in general, have the following parts:
 
 * The *type* of message.  It states what is this all about. Furthermore, is it a request or a reply?
 * The *body* of the message, the actual information we are carrying.  What are we requesting, what is our reply.
@@ -391,7 +395,7 @@ This is what the **FSA** message format provides.
 
 [FSA](https://www.npmjs.com/package/flux-standard-action), for *Flux Standard Action*, is a message format to transmit *actions* to be performed.  The Firmata protocol uses MIDI because it is very compact and thus suitable for devices with very little processing resources.  However, in the web environment, both clients and servers have plenty of resources and the transmission networks have high bandwidth, thus, a more verbose protocol, much easier to produce and read, is preferred which is much less prone to errors and easier to debug since it is human-readable. Compact, bit-oriented protocols, like MIDI, are harder to debug because you have to break up the bytes into different bit groups.
 
-We adopted the following convention:
+We adopted the convention of using an object with the following properties:
 
 * `type`: a string specifying the action requested or replied to.  This is the only mandatory field.
 * `payload`: an object containing the parameters required for the requested action, as properties.
@@ -402,27 +406,42 @@ The actual standard is somewhat lax in what the last three, optional, properties
 
 Being a JavaScript object, an FSA is easy to transmit as a JSON string both for commands and replies.
 
+We have also adopted the convention that all replies will have the same `type` as the request, suffixed with either `_reply` if successful or `_error` if not.  All replies will have a `meta.date` property set to an ISO date precise to the millisecond.  Error replies will have the `error` property containing a numerical `code` and a human-readable `msg`.  The answer, if any, will be merged within the `payload`.
+
+To help with the FSAs, the file [`actionBuilders.ts`](https://github.com/Satyam/firmata-http-bridge/blob/main/src/actionBuilders.ts) contains functions that build the various FSAs listed below.  It also contains the function [`makeReply`](https://github.com/Satyam/firmata-http-bridge/blob/main/src/actionBuilders.ts#L178-L206) that helps transform the requests into replies.
+
 #### Fetch API
 
 To send and receive HTTP messages from a web client, the most standard way is the [`Fetch API`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API), which is available in almost all modern browser, or can be *polyfilled* in others.  It can also be used in servers communicating with other servers.
 
-Other non-standard solutions like the very popular [axios](https://www.npmjs.com/package/axios) which works in all browsers or [jQuery](https://api.jquery.com/category/ajax/) which was the obvious option if you were already using jQuery.
+There are other non-standard solutions like the very popular [axios](https://www.npmjs.com/package/axios) which works in all browsers or [jQuery](https://api.jquery.com/category/ajax/) which was the obvious option if you were already using jQuery.
 
 Since we will always be receiving JSON via HTTP POST, to a specific virtual *folder* on the server, the functionality on the client side is condensed into the [`postCommand` :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/public/post.html#L115-L120) function.  This command sends a POST to `http://localhost:8000/command` with the FSA message *stringified* into the body, and expects the reply to also be in JSON, which it decodes via `res.json()`. (`req` and `res` are common short names for *request* and *response*, this last name being preferred over `reply` because `req` and `rep` are too similar).
 
 Fetching something from a server is an *asynchronous* operation, meaning that you don't know when the reply might arrive, even at its fastest, which might seem instantaneous to a user, it takes ages for a program.  Thus, the `Fetch` request returns a [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) which is a standard object in most browsers and can be *polyfilled* in Internet Explorer, the only one that doesn't have it.
 
-On the server side, the request from the client is handled [here :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/post/index.ts#L36-L52).  Instead of an `app.get()` call as we had before, we now use an `app.post('/command', ... ` meaning we will respond to HTTP POST messages sent to the `/command` virtual path.  The FSA is already decoded from the `res.body` of the message and we use the `type` part of the FSA to call a function of the same name as the action.  We then wait for the return value of that function and send it back to the client with `res.json()` instead of `res.send()` as we did before. The latter expected text (plain or HTML) which the former expects and object which it serializes it into JSON and puts it in the body of the reply.
+On the server side, the request from the client is handled [here :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/post/index.ts#L36-L52).  Instead of an `app.get()` call as we had before, we now use an `app.post('/command', ... ` meaning we will respond to HTTP POST messages sent to the `/command` virtual path.  The FSA is already decoded from the `res.body` of the message and we use the `type` part of the FSA to call a function of the same name as the action.  We then wait for the return value of that function and send it back to the client with `res.json()` instead of `res.send()` as we did before. The latter expected text (plain or HTML) while the former expects an object which it serializes into JSON and puts it in the body of the reply.
 
 
 In the following list, the commands will be represented by their FSA messages as will the replies, counting on a function such as `postCommand`, discussed above, to send it and wait for the reply.
 
+The can all be tried out via the [post.html :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/post/index.ts) which is available from the server itself when it is running at: [`http://localhost:8000/post.html`](http://localhost:8000/post.html) and via a link in the home page.
 
+#### POST pinMode
 
+A `POST` to `http://localhost:8000/command` with the following FSA will set the pin 13 (the builtin led in the Arduino Uno board) to output mode.   
 
-#### pinMode
+```json
+{
+  "type":"pinMode",
+  "payload": {
+    "pin":13,
+    "mode":1
+  }
+}
+```
 
-A `GET` to `http://localhost:8000/pinMode/13/1` will set the pin 13 (the builtin led in the Arduino Uno board) to output mode.   The first value after `pinMode/` is the pin number and the second after the next slash is the mode that should be one of:
+The mode that should be one of:
 
 ```
   INPUT:    0,
@@ -441,18 +460,6 @@ A `GET` to `http://localhost:8000/pinMode/13/1` will set the pin 13 (the builtin
 ```
 Not all pins support all modes.  To find out which ones are valid, you may ask for `http://localhost:8000/digitalPins/13` and check the `supportedModes` values.
 
-The URL is translated internally to the following FSA:
-
-```json
-{
-  "type":"pinMode",
-  "payload": {
-    "pin":13,
-    "mode":0
-  }
-}
-```
-
 And it would be answered with the following reply:
 
 ```json
@@ -460,7 +467,7 @@ And it would be answered with the following reply:
   "type":"pinMode_reply",
   "payload": {
     "pin":13,
-    "mode":0
+    "mode":1
   },
   "meta": {
     "date":"2021-03-16T17:08:01.041Z"
@@ -470,7 +477,7 @@ And it would be answered with the following reply:
 
 The `type` property has now a suffix of `_reply` and a `meta.date` property has been added with the ISO 8601 date when the command was executed, possibly for logging purposes or whatever.
 
-If the URL has an invalid pin or mode, for example:  `http://localhost:8000/pinMode/999/1` the server would reply with a type suffix of `_error` and an `error` property:
+If the URL has an invalid pin or mode the server would reply with a type suffix of `_error` and an `error` property:
 
 ```json
 {
@@ -489,9 +496,21 @@ If the URL has an invalid pin or mode, for example:  `http://localhost:8000/pinM
 }
 ```
 
-#### digitalWrite
+#### POST digitalWrite
 
-Once set to output mode via [`pinMode`](#pinmode), values can be set via a `GET` to `http://localhost:8000/digitalWrite/13/0` which would return:
+The following FSA would set pin 13 to a low voltage:
+
+```json
+{
+  "type":"digitalWrite",
+  "payload": {
+    "pin":13,
+    "output":0
+  }
+}
+```
+
+It would be answered with:
 
 ```json
 {
@@ -505,26 +524,23 @@ Once set to output mode via [`pinMode`](#pinmode), values can be set via a `GET`
   }
 }
 ```
+
 Or an error reply, similar to the one shown above.
 
-The `digitalWrite` command is followed by the pin number and the value, either `0` or `1`, all separated with slash `/`
+#### POST digitalRead
 
-To blink the built-in led, the following sequence of requests can be send:
+An input pin can be read via the following FSA:
 
+```json
+{
+  "type":"digitalRead",
+  "payload":{
+    "pin":2,
+  }
+}
 ```
-http://localhost:8000/pinMode/13/1
-http://localhost:8000/digitalWrite/13/0
-http://localhost:8000/digitalWrite/13/1
-http://localhost:8000/digitalWrite/13/0
-http://localhost:8000/digitalWrite/13/1
-```
-The first would set the pin for output and the following URLs will set the led on and off.
 
-#### digitalRead
-
-An input pin can be read via a `GET` to `http://localhost:8000/digitalRead/2` where the last value can be any of the digital pins.  
-
-After setting the [`pinMode`](#pinmode) for input with pull up with: `http://localhost:8000/pinMode/2/11`, assuming nothing is connected to that pin, the `http://localhost:8000/digitalRead/2`  would produce a reply such as:
+Which would get a reply such as the following, with the `value` property added to the payload:
 
 ```json
 {
@@ -539,5 +555,96 @@ After setting the [`pinMode`](#pinmode) for input with pull up with: `http://loc
 }
 ```
 
+Just like [GET digitalRead](#get-digitalread), this API only reads a single value.
 
 ### Sockets
+
+Something that all HTTP methods have in common is that it is up to the client to initiate something.  The server can only reply to requests made, and that within a limited time, otherwise the browser will show an error page saying that the connection timed out.  The server cannot contact the client out of its own initiative.  That is why the `digitalRead` operations, both for `GET` and `POST` can only read one value.  You can't ask the server to keep an eye on a certain pin and notify the client when it changes, the client has to keep asking.  If the client asks too much, it hogs bandwidth, if it asks to little, it misses changes.
+
+It is fair to say that the WWW wouldn't be what it is if the HTTP protocol wasn't limited in that way.  If the millions of servers in the WWW had to keep track of who is connected and what is each one doing, it would not be capable of processing so many requests.  The basis of the HTTP protocol is that after the server replies to each request, it immediately and totally forgets that the client ever existed.  Each client request has to be complete on its own, that is also why *server farms* are possible.  Since each HTTP request is complete, any server can handle a follow-up request, it does not need to go back to the same server that handled the first request, it is *context-free*.  It is the client that, via *cookies*, provides the server with the context needed, such as your login status.
+
+Some applications can do with periodical requests for status.  If you are on a chat, the client might be *polling* at regular intervals and the users might *perceive* it as fast enough. Not so with a group video game were delays would be unacceptable.
+
+That is why we have [*sockets*](https://en.wikipedia.org/wiki/Network_socket).  With sockets, both client and server can *listen* to each other.  Whenever either one has news, it can send a message to the other, without any need for either one to request anything. They just keep listening to each other.  
+
+Sockets don't come for free.  As we said, the HTTP protocol was designed to be context-free so a minimal number of servers could handle very many requests.  Sockets require servers to keep the connection to the client alive and retain some information from each and every client.  Server farms handling multi-user games need far more servers per number of users than regular server farms handling only HTTP pages.
+
+#### Socket.io
+We are using the very popular and solid [socket.io](https://www.npmjs.com/package/socket.io) library which has both libraries suitable to run on a node.js server and in a web browser.  The protocol is the same, but the environment is different in each.
+
+We won't go deep into how Socket.io is setup, it is just a recipe that can be read from their [documentation](https://socket.io/).  We will just highlight an important concept.  Socket.io relies on *events*, not hardware events like mouse clicks or keystrokes but software events, which are triggered not by physical events but by programs.
+
+When either side wants to send something to the other side, the emitter calls the `emit` method of the socket both in the [client :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/public/sockets.html#L174-L177) or in the [server :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/sockets/index.ts#L69-L77).  The first argument to the `emit` method is the *event-type*.  In hardware events, that would me `mouseclick` or `keypress`, but in software events, it is whatever the developer wants.  In this case, the messages going from client to server are `'command'` and the ones from the server to the client `'reply'` mostly as a throwback to the POST commands since in this case, the server can emit events to the client at any time, not only as a reply to some request.
+
+On the receiving side, be it the [client :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/public/sockets.html#L180) or the [server :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/sockets/index.ts#L56) you subscribe to those events by calling the `on` method and giving the *event-type* you mean to listen to.  Just like in hardware events, where you set listeners for `onClick` or `onKeyPress`, here you set listeners for software events defined by the developer.
+
+The second parameter in the `emit` call is the message being sent, which is a stringified JSON representation of the FSAs which is received at the other end at the `on` listener function as its single parameter.
+
+This change is somewhat reflected in the [test page](http://localhost:8000/sockets.html). While in the previous test page for [post](http://localhost:8000/post.html) you have a section of the page devoted to each command, with the request FSA and reply FSA shown side by side, in the sockets version, the replies might come at any time and not associated with the requests.  Thus, they are both logged in a table at the bottom of the page and, as a matter of fact, on initialization, a few messages will be logged in the table without the user doing anything at all.
+
+So now that we have the ability to send messages from the server to the client at will, just as the client can subscribe to events emitted by the server, the server can subscribe to *read* events emitted by the Firmata software.
+
+Thus, we have added two FSAs actions.
+
+#### digitalReadSubscribe
+
+The [digitalReadSubscribe :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/pinCommands.ts#L165-L187) FSA tells the server that we want to listen to value changes on the given pin.
+
+```json
+{
+  "type":"digitalReadSubscribe",
+  "payload": {
+    "pin": 2
+  } 
+}
+```
+
+Which will be replied to with:
+
+```json
+{
+  "type":"digitalReadSubscribe_reply",
+  "payload": {
+    "pin": 2
+  },
+  "meta": {
+    "date":"2021-03-16T17:08:01.041Z"
+  }
+}
+```
+
+On an error reply if the pin does not exist.  Either way, the value of the pin will not be sent yet.
+
+#### digitalRead_reply
+
+Once subscribed, the server will emit message with the value of the pin whenever it changes.  This is done by the [callback function :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/sockets/index.ts#L68-L79) and has the same format as the FSA for the single `digitalRead` as used in the [POST `digitalRead`](#post-digitalread):
+
+```json
+{
+  "type":"digitalRead_reply",
+  "payload":{
+    "pin":2,
+    "value":1
+  },
+  "meta": {
+    "date":"2021-03-16T17:45:48.305Z"
+  }
+}
+```
+
+Those replies will keep coming any time there is a change in the state of the pin.
+
+#### digitalReadUnsubscribe
+
+The [digitalReadUnsubscribe :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/pinCommands.ts#L199-L216) command tells the server that we don't want pay any further attention to the given pin.
+
+```json
+{
+  "type":"digitalReadUnsubscribe",
+  "payload": {
+    "pin": 2
+  } 
+}
+```
+No further [`digitalRead_reply`](#digitalread_reply) messages will be received at the client unless a `digitalRead` command is sent (which is still available) or a new read subscription is made.
+
