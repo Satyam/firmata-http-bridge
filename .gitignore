@@ -105,3 +105,4 @@ dist
 
 # Documentation
 docs/
+.vscode/settings.json
