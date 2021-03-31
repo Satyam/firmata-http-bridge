@@ -38,6 +38,7 @@
   "devDependencies": {
     "@babel/preset-env": "^7.13.10",
     "@babel/preset-typescript": "^7.13.0",
+    "@serialport/binding-abstract": "^8.0.6",
     "@types/express": "^4.17.11",
     "@types/firmata": "^0.19.3",
     "@types/jest": "^26.0.20",

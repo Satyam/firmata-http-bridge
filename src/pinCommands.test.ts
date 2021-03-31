@@ -31,7 +31,10 @@ afterEach(() => board.reset());
 
 afterAll((done) => {
   // @ts-ignore
-  board.transport.close(done);
+  if (board && board.transport && board.transport.close)
+    // @ts-ignore
+    board.transport.close(done);
+  done();
 });
 
 describe('pinMode', () => {
