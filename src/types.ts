@@ -1,7 +1,4 @@
-import Board from 'firmata';
-import type { Express } from 'express';
-import type { Server } from 'http';
-/* *
+/*
  * Enumeration of the possible error codes.
  *
  * @export
