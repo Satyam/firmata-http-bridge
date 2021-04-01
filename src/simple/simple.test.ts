@@ -80,7 +80,7 @@ describe('Simple URL GET requests', () => {
         buildUrl('pinMode', LED_BUILTIN, board.MODES.OUTPUT)
       );
       expect(res.status).toBe(200);
-      expect(await res.text()).toMatchInlineSnapshot(`"Pin 13 set to 1 mode"`);
+      expect(await res.text()).toMatchInlineSnapshot(`"Pin 13 set to mode 1"`);
     });
 
     test('bad pin', async () => {
