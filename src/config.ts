@@ -23,7 +23,8 @@ envRead();
 
 // patch to prevent commander to parse options passed to jest
 const argv = process.argv.filter(
-  (part) => !['-w=1', '--coverage', '--silent'].includes(part)
+  (part) =>
+    !['-w=1', '--coverage', '--silent', '-u', '--verbose'].includes(part)
 );
 
 const commander = new Command();
