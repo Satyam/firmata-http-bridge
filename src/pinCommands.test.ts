@@ -31,7 +31,7 @@ afterEach(() => board.reset());
 
 afterAll((done) => {
   // @ts-ignore
-  if (typeof board?.transport?.close === 'function')
+  if (board?.transport?.isOpen)
     // @ts-ignore
     board.transport.close(done);
   else done();
