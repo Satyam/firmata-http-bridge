@@ -1,5 +1,4 @@
 import fetch from 'node-fetch';
-import Board from 'firmata';
 
 import { config, board } from '../config.js';
 import { start, stop } from '../server.js';
