@@ -17,7 +17,7 @@ function pathResolve(relPath: string): string {
 /**
  * Starts the server by
  * * Opening the board specified in the
- *   `USB_PORT` command line option or environment variable.
+ *   `USB_PATH` command line option or environment variable.
  * * Launching a web server listening on the port specified in the
  *   `HTTP_PORT` command line option or environment variable.
  * @export
@@ -66,7 +66,7 @@ export function start(): Promise<void> {
 
     board.on('error', reject);
     board.on('ready', () => {
-      console.log(`Arduino at ${config.USB_PORT} is ready to communicate`);
+      console.log(`Arduino at ${config.USB_PATH} is ready to communicate`);
       http.listen(config.HTTP_PORT, () => {
         console.log(`Firmata bridge listening on port ${config.HTTP_PORT}!`);
         resolve();

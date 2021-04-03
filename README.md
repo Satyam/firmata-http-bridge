@@ -205,13 +205,13 @@ You could also set environment variables by the same name.
 Configuration can be set via a file named `.env`  with the new settings.  A sample `.env` file might look like:
 ```
 HTTP_PORT=3000
-USB_PORT=/dev/ttyACM1
+USB_PATH=/dev/ttyACM1
 ```
 
 ### Settings
 
 * `HTTP_PORT`: Defaults to 8000, sets the port to be used for the web server.
-* `USB_PORT`: Defaults to `/dev/ttyACM0` which is the standard port used by Firmata for Linux.  The correct value can be found by letting the Arduino IDE find it for you.
+* `USB_PATH`: Defaults to `/dev/ttyACM0` which is the standard port used by Firmata for Linux.  The correct value can be found by letting the Arduino IDE find it for you.
   
 ## API
 

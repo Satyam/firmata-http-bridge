@@ -6,7 +6,7 @@
  * * Environment variable of the same name
  * * defaults
  *    * HTTP_PORT= 8000
- *    * USB_PORT="/dev/ttyACM0"
+ *    * USB_PATH="/dev/ttyACM0"
  *
  * It may add some extra properties from the command line.
  * @module
@@ -38,9 +38,9 @@ commander
     parseInt(process.env.HTTP_PORT, 10) || 8000
   )
   .option(
-    '-up, --USB_PORT <device>',
+    '-up, --USB_PATH <device>',
     'Communication port the controller is connected to',
-    process.env.USB_PORT || '/dev/ttyACM0'
+    process.env.USB_PATH || '/dev/ttyACM0'
   )
   .name(
     `
@@ -62,6 +62,6 @@ export const config = commander.opts();
 
 export const app = express();
 export const http = createServer(app);
-export const board = new Board(config.USB_PORT);
+export const board = new Board(config.USB_PATH);
 
 export default config;
