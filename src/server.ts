@@ -84,7 +84,8 @@ export function stop(): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     console.log('Server closing');
     http.close();
-    if (board) {
+    // @ts-ignore
+    if (board?.transport?.isOpen) {
       // @ts-ignore
       board.transport.close((error) => {
         /* istanbul ignore if */
