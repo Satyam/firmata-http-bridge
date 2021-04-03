@@ -157,7 +157,9 @@ npm t
 
 Unit tests are meant to ensure that if you change the code, current behavior is maintained.  Tests should also be expanded to cover new features or added to uncover hidden bugs (usually to test unexpected behavior reported by end users).
 
-The current tests were written for an [Arduino Uno](https://store.arduino.cc/arduino-uno-rev3) board.  Many will fail if used with another board or if a board is not actually connected.  In this sense, they are *integration tests* rather than *unit tests* which would usually resort to *mocks* for Firmata instead of the real thing.
+The current tests were written for an [Arduino Uno](https://store.arduino.cc/arduino-uno-rev3) board.  Many will fail if used with another board or if a board is not actually connected.  In this sense, they are *integration tests* rather than *unit tests* which would usually resort to *mocks* for Firmata instead of an actual microcontroller.
+
+See the section for [tests](#tests) below for more details.
 
 ### Coverage
 
@@ -212,6 +214,8 @@ USB_PATH=/dev/ttyACM1
 
 * `HTTP_PORT`: Defaults to 8000, sets the port to be used for the web server.
 * `USB_PATH`: Defaults to `/dev/ttyACM0` which is the standard port used by Firmata for Linux.  The correct value can be found by letting the Arduino IDE find it for you.
+* `TEST_DIGITAL_OUTPUT_PIN`: defaults to 13, where the Arduino board usually has the LED connected. This value is used only for running tests, and it is the pin number used for digital output commands.
+* `TEST_DIGITAL_INPUT_PIN`: defaults to 2. This value is used only for running tests, and it is the pin number used for digital input commands.
   
 ## API
 

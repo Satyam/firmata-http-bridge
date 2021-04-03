@@ -5,8 +5,6 @@ import { start, stop } from './server.js';
 
 import { FSA } from './types.js';
 
-const LED_BUILTIN = 13;
-
 const BAD_PIN = 999;
 const BAD_MODE = 999;
 

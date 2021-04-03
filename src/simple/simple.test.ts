@@ -1,13 +1,10 @@
 import fetch from 'node-fetch';
 
-import { config, board } from '../config.js';
+import { board, config } from '../config.js';
 import { start, stop } from '../server.js';
 
 const buildUrl = (...path: (string | number)[]): string =>
   `http://localhost:${config.HTTP_PORT}/${path.join('/')}`;
-
-const LED_BUILTIN = 13;
-const INPUT_PIN = 2;
 
 const BAD_PIN = 999;
 const BAD_MODE = 999;
@@ -77,7 +74,7 @@ describe('Simple URL GET requests', () => {
   describe('pin mode', () => {
     test('pin mode', async () => {
       const res = await fetch(
-        buildUrl('pinMode', LED_BUILTIN, board.MODES.OUTPUT)
+        buildUrl('pinMode', config.TEST_DIGITAL_OUTPUT_PIN, board.MODES.OUTPUT)
       );
       expect(res.status).toBe(200);
       expect(await res.text()).toMatchInlineSnapshot(`"Pin 13 set to mode 1"`);
@@ -90,7 +87,9 @@ describe('Simple URL GET requests', () => {
     });
 
     test('bad mode', async () => {
-      const res = await fetch(buildUrl('pinMode', LED_BUILTIN, BAD_MODE));
+      const res = await fetch(
+        buildUrl('pinMode', config.TEST_DIGITAL_OUTPUT_PIN, BAD_MODE)
+      );
       expect(res.status).toBe(400);
       expect(await res.text()).toMatchInlineSnapshot(
         `"Invalid mode 999 for pin 13"`
@@ -101,20 +100,22 @@ describe('Simple URL GET requests', () => {
   describe('digitalWrite', () => {
     beforeAll(async () => {
       const res1 = await fetch(
-        buildUrl('pinMode', LED_BUILTIN, board.MODES.OUTPUT)
+        buildUrl('pinMode', config.TEST_DIGITAL_OUTPUT_PIN, board.MODES.OUTPUT)
       );
       expect(res1.status).toBe(200);
     });
     test('pin high', async () => {
       const res = await fetch(
-        buildUrl('digitalWrite', LED_BUILTIN, board.HIGH)
+        buildUrl('digitalWrite', config.TEST_DIGITAL_OUTPUT_PIN, board.HIGH)
       );
       expect(res.status).toBe(200);
       expect(await res.text()).toMatchInlineSnapshot(`"Pin 13 set to 1"`);
     });
 
     test('pin low', async () => {
-      const res = await fetch(buildUrl('digitalWrite', LED_BUILTIN, board.LOW));
+      const res = await fetch(
+        buildUrl('digitalWrite', config.TEST_DIGITAL_OUTPUT_PIN, board.LOW)
+      );
       expect(res.status).toBe(200);
       expect(await res.text()).toMatchInlineSnapshot(`"Pin 13 set to 0"`);
     });
@@ -128,7 +129,9 @@ describe('Simple URL GET requests', () => {
     });
 
     test('bad value', async () => {
-      const res = await fetch(buildUrl('digitalWrite', LED_BUILTIN, 999));
+      const res = await fetch(
+        buildUrl('digitalWrite', config.TEST_DIGITAL_OUTPUT_PIN, 999)
+      );
       expect(res.status).toBe(400);
       expect(await res.text()).toMatchInlineSnapshot(
         `"Invalid output 999 for pin 13"`
@@ -138,13 +141,15 @@ describe('Simple URL GET requests', () => {
   describe('digitalRead', () => {
     beforeAll(async () => {
       const res = await fetch(
-        buildUrl('pinMode', INPUT_PIN, board.MODES.PULLUP)
+        buildUrl('pinMode', config.TEST_DIGITAL_INPUT_PIN, board.MODES.PULLUP)
       );
       expect(res.status).toBe(200);
     });
 
     test('read pin 2 with pullup', async () => {
-      const res = await fetch(buildUrl('digitalRead', INPUT_PIN));
+      const res = await fetch(
+        buildUrl('digitalRead', config.TEST_DIGITAL_INPUT_PIN)
+      );
       expect(res.status).toBe(200);
       expect(await res.text()).toMatchInlineSnapshot(`"Pin 2 returned 1"`);
     });

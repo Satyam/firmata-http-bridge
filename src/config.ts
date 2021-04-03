@@ -7,6 +7,8 @@
  * * defaults
  *    * HTTP_PORT= 8000
  *    * USB_PATH="/dev/ttyACM0"
+ *    * TEST_DIGITAL_OUTPUT_PIN=13
+ *    * TEST_DIGITAL_INPUT_PIN=2
  *
  * It may add some extra properties from the command line.
  * @module
@@ -42,6 +44,18 @@ commander
     'Communication port the controller is connected to',
     process.env.USB_PATH || '/dev/ttyACM0'
   )
+  .option(
+    '-tdout, --TEST_DIGITAL_OUTPUT_PIN <pin number>',
+    'Pin to use to perform digital output tests',
+    (value) => parseInt(value, 10),
+    parseInt(process.env.TEST_DIGITAL_OUTPUT_PIN, 10) || 13
+  )
+  .option(
+    '-tdin, --TEST_DIGITAL_INPUT_PIN <pin number>',
+    'Pin to use for digital input tests',
+    (value) => parseInt(value, 10),
+    parseInt(process.env.TEST_DIGITAL_INPUT_PIN, 10) || 2
+  )
   .name(
     `
   node . [options]
@@ -58,7 +72,12 @@ Example:
   )
   .parse(argv);
 
-export const config = commander.opts();
+export const config = commander.opts() as {
+  HTTP_PORT: number;
+  USB_PATH: string;
+  TEST_DIGITAL_OUTPUT_PIN: number;
+  TEST_DIGITAL_INPUT_PIN: number;
+};
 
 export const app = express();
 export const http = createServer(app);
