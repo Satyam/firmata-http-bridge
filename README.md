@@ -705,11 +705,11 @@ There is obviously a `beforeEach` as well, but we didn't have a need for that on
 
 Then, you start grouping your tests with `describe` calls in any way you want.  `describe` is not required and only serves to get your individual tests organized and to provide a descriptive message if anyone fails.  
 
-For example, for the [`digitalWrite` :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/pinCommands.test.ts#L69-L109) function, we have tests to check when it is set high, when it is set low, when we give an incorrect pin number and when we try to set the output to an invalid value (not 0 nor 1).
+For example, in the [`digitalWrite` :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/pinCommands.test.ts#L81-L146) set of tests, we have tests to check when it is set high, when it is set low, when we give an incorrect pin number and when we try to set the output to an invalid value (not 0 nor 1).
 
 Tests are actually performed by the functions registered via the `test` function.  It takes a descriptive text, to help the developer locate a failed test, and a function that runs the test.
 
-For [`pin High` :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/pinCommands.test.ts#L70-L78) we set the pin to output mode, using the `pinMode` function we tested in the previous lines.  We then use `digitalWriteActionBuilder` to build the FSA for the `digitalWrite` action. We then call [`digitalWrite` :octocat:](digitalWriteActionBuilder) with the `writeHigh` FSA we have just built.  This line is particularly important so we'll analyze it in detail:
+For [`pin High` :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/pinCommands.test.ts#L82-L98) we set the pin to output mode, using the `pinMode` function we tested in the previous lines.  We then use `digitalWriteActionBuilder` to build the FSA for the `digitalWrite` action. We then call [`digitalWrite` :octocat:](digitalWriteActionBuilder) with the `writeHigh` FSA we have just built.  This line is particularly important so we'll analyze it in detail:
 
 ```js
 expect(digitalWrite(writeHigh)).toBeFSAReply(writeHigh);
@@ -730,13 +730,14 @@ Does Jest have checks specific for FSAs?  Not really, but you can extend the tes
 Jest provides a whole set of various [expectations](https://jestjs.io/docs/expect), such as those used on the lines before and after the line we analyzed. 
 
 ```js
-expect(board.pins[LED_BUILTIN].value).toEqual(board.LOW);
+expect(board.pins[config.TEST_DIGITAL_OUTPUT_PIN].value).toEqual(board.LOW);
 expect(digitalWrite(writeHigh)).toBeFSAReply(writeHigh);
-expect(board.pins[LED_BUILTIN].value).toEqual(board.HIGH);
+expect(board.pins[config.TEST_DIGITAL_OUTPUT_PIN].value).toEqual(board.HIGH);
 ```
+
 In the top and bottom lines above, we tell Jest to check on the board status for the pin we are testing, first expecting it to be equal to `board.LOW` and, once we set it high, to `board.HIGH`.
 
-In another test we check for an error reply to a [bad pin :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/pinCommands.test.ts#L90-L98).  In this case, we build an FSA with an outrageous pin number and expect the reply to be a proper FSA and to have an error code of `ErrorCodes.BAD_PIN`.
+In another test we check for an error reply to a [bad pin :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/pinCommands.test.ts#L118-L129).  In this case, we build an FSA with an outrageous pin number and expect the reply to be a proper FSA and to have an error code of `ErrorCodes.BAD_PIN`.
 
 In tests such as [`server.test.ts` :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.test.ts) or [`simple.test.ts` :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/simple.test.ts) we actually start the server and use a slightly modified version of `postCommand` to send actual HTTP request to that server, thus fully testing the app from end to end.
 
