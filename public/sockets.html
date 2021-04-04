@@ -129,11 +129,10 @@
 
       const replyEl = document.getElementById('replies');
 
+      const dateRegex = /^[\d\-]+T([\d\.:]*)Z$/;
       const formatTime = (dateString) => {
         const d = dateString ? new Date(dateString) : new Date();
-        return `${d.toLocaleTimeString()}, ${String(
-          d.getMilliseconds()
-        ).padStart(3, '0')}ms`;
+        return d.toISOString().replace(dateRegex, '$1');
       };
 
       const logRequest = (request) => {
