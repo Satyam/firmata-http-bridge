@@ -32,21 +32,21 @@ export function start(): Promise<void> {
     setupSockets();
 
     app.get('/dist/*', (req, res) => {
-      res.sendFile(req.path.replace(/\/dist\//, '/'), {
-        root: pathResolve('../dist'),
+      res.sendFile(req.path, {
+        root: pathResolve('../'),
         dotfiles: 'deny',
       });
     });
 
     app.get('/docs/*', (req, res) => {
-      res.sendFile(req.path.replace(/\/docs\//, '/'), {
-        root: pathResolve('../docs'),
+      res.sendFile(req.path, {
+        root: pathResolve('../'),
         dotfiles: 'deny',
       });
     });
     app.get('/coverage/*', (req, res) => {
-      res.sendFile(req.path.replace(/\/coverage\//, '/'), {
-        root: pathResolve('../coverage'),
+      res.sendFile(req.path, {
+        root: pathResolve('../'),
         dotfiles: 'deny',
       });
     });
