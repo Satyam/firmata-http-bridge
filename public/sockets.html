@@ -131,9 +131,9 @@
 
       const formatTime = (dateString) => {
         const d = dateString ? new Date(dateString) : new Date();
-        return `${d.toLocaleTimeString()}, ${d
-          .getMilliseconds()
-          .padStart(3, '0')}ms`;
+        return `${d.toLocaleTimeString()}, ${String(
+          d.getMilliseconds()
+        ).padStart(3, '0')}ms`;
       };
 
       const logRequest = (request) => {
