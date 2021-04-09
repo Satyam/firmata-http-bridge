@@ -21,13 +21,13 @@ import { makeReply, digitalReadActionBuilder } from '../actionBuilders.js';
 
 const commands: Record<string, Commands> = {
   digitalRead,
-  digitalReadUnsubscribe,
   digitalWrite,
   pinMode,
 };
 
 const cbCommands: Record<string, CallbackCommand> = {
   digitalReadSubscribe,
+  digitalReadUnsubscribe,
 };
 /**
  * Sets up a new socket server to accept the following FSA actions via sockets and
@@ -53,6 +53,19 @@ export default function setup(): void {
       socket.emit('reply', JSON.stringify(reply));
     }
 
+    const callbacks: Array<(value: number) => void> = [];
+    const callback = (pin: number) => (value: number) => {
+      socket.emit(
+        'reply',
+        JSON.stringify({
+          type: 'digitalRead_reply',
+          payload: { pin, value },
+          meta: {
+            date: new Date().toISOString(),
+          },
+        })
+      );
+    };
     socket.on('command', async (msg) => {
       const action = JSON.parse(msg) as FSA;
 
@@ -64,20 +77,8 @@ export default function setup(): void {
       if (type in commands) {
         reply(await commands[type](action));
       } else if (type in cbCommands) {
-        reply(
-          cbCommands[type](action, (value) => {
-            socket.emit(
-              'reply',
-              JSON.stringify({
-                type: 'digitalRead_reply',
-                payload: { pin, value },
-                meta: {
-                  date: new Date().toISOString(),
-                },
-              })
-            );
-          })
-        );
+        if (!callbacks[pin]) callbacks[pin] = callback(pin);
+        reply(cbCommands[type](action, callbacks[pin]));
       } else {
         reply({
           ...action,
