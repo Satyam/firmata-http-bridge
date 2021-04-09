@@ -64,8 +64,11 @@ export function start(): Promise<void> {
       });
     });
 
-    board.on('error', reject);
-    board.on('ready', () => {
+    board.on('error', (error) => {
+      console.error('board error', error);
+      setImmediate(() => reject(error));
+    });
+    board.once('ready', () => {
       console.log(`Arduino at ${config.USB_PATH} is ready to communicate`);
       http.listen(config.HTTP_PORT, () => {
         console.log(`Firmata bridge listening on port ${config.HTTP_PORT}!`);
@@ -83,15 +86,18 @@ export function start(): Promise<void> {
 export function stop(): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     console.log('Server closing');
-    http.close();
-    // @ts-ignore
-    if (board?.transport?.isOpen) {
-      // @ts-ignore
-      board.transport.close((error) => {
-        /* istanbul ignore if */
-        if (error) reject(error);
-        else resolve();
-      });
-    } else resolve();
+    http.close((error) => {
+      if (error) {
+        console.error('Closing http', error);
+        setImmediate(() => reject(error));
+      } else
+        board.close((error) => {
+          /* istanbul ignore if */
+          if (error) {
+            console.error('Closing board', error);
+            setImmediate(() => reject(error));
+          } else resolve();
+        });
+    });
   });
 }
