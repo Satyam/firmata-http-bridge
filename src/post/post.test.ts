@@ -29,6 +29,9 @@ const postCommand: (action: FSA) => Promise<FSA> = (action) =>
 const BAD_PIN = 999;
 const BAD_MODE = 999;
 
+const INPUT_PIN = config.TEST_DIGITAL_INPUT_PIN;
+const OUTPUT_PIN = config.TEST_DIGITAL_OUTPUT_PIN;
+
 beforeAll(() => {
   extendJest(expect);
   return start().catch(() => {
@@ -58,10 +61,7 @@ test('bad command', async () => {
 
 describe('pin mode', () => {
   test('pin mode', async () => {
-    const action = pinModeActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      board.MODES.OUTPUT
-    );
+    const action = pinModeActionBuilder(OUTPUT_PIN, board.MODES.OUTPUT);
     const res = await postCommand(action);
     expect(res).toBeFSAReply(action);
   });
@@ -74,104 +74,65 @@ describe('pin mode', () => {
   });
 
   test('bad mode', async () => {
-    const action = pinModeActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      BAD_MODE
-    );
+    const action = pinModeActionBuilder(OUTPUT_PIN, BAD_MODE);
     const res = await postCommand(action);
     expect(res).toBeFSAReply(action);
     expect(res).toHaveErrorCode(ErrorCodes.BAD_MODE);
   });
 });
-describe('digitalWrite', () => {
-  test('pin high', async () => {
-    const modeAction = pinModeActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      board.MODES.OUTPUT
-    );
-    const res1 = await postCommand(modeAction);
-    expect(res1).toBeFSAReply(modeAction);
 
-    const writeHigh = digitalWriteActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      board.HIGH
-    );
-    const res2 = await postCommand(writeHigh);
-    expect(res2).toBeFSAReply(writeHigh);
+describe('digitalWrite', () => {
+  beforeAll(async () => {
+    const modeAction = pinModeActionBuilder(OUTPUT_PIN, board.MODES.OUTPUT);
+    const res = await postCommand(modeAction);
+    expect(res).toBeFSAReply(modeAction);
+  });
+
+  test('pin high', async () => {
+    const writeHigh = digitalWriteActionBuilder(OUTPUT_PIN, board.HIGH);
+    const res = await postCommand(writeHigh);
+    expect(res).toBeFSAReply(writeHigh);
   });
 
   test('pin low', async () => {
-    const modeAction = pinModeActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      board.MODES.OUTPUT
-    );
-    const res1 = await postCommand(modeAction);
-    expect(res1).toBeFSAReply(modeAction);
-
-    const writeLow = digitalWriteActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      board.LOW
-    );
-    const res2 = await postCommand(writeLow);
-    expect(res2).toBeFSAReply(writeLow);
+    const writeLow = digitalWriteActionBuilder(OUTPUT_PIN, board.LOW);
+    const res = await postCommand(writeLow);
+    expect(res).toBeFSAReply(writeLow);
   });
 
   test('bad pin', async () => {
-    const modeAction = pinModeActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      board.MODES.OUTPUT
-    );
-    const res1 = await postCommand(modeAction);
-    expect(res1).toBeFSAReply(modeAction);
-
     const writeHigh = digitalWriteActionBuilder(BAD_PIN, board.HIGH);
-    const res2 = await postCommand(writeHigh);
-    expect(res2).toBeFSAReply(writeHigh);
-    expect(res2).toHaveErrorCode(ErrorCodes.BAD_PIN);
+    const res = await postCommand(writeHigh);
+    expect(res).toBeFSAReply(writeHigh);
+    expect(res).toHaveErrorCode(ErrorCodes.BAD_PIN);
   });
 
   test('bad value', async () => {
-    const modeAction = pinModeActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      board.MODES.OUTPUT
-    );
-    const res1 = await postCommand(modeAction);
-    expect(res1).toBeFSAReply(modeAction);
-
-    const writeHigh = digitalWriteActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      999
-    );
-    const res2 = await postCommand(writeHigh);
-    expect(res2).toBeFSAReply(writeHigh);
-    expect(res2).toHaveErrorCode(ErrorCodes.BAD_OUTPUT);
+    const writeHigh = digitalWriteActionBuilder(OUTPUT_PIN, 999);
+    const res = await postCommand(writeHigh);
+    expect(res).toBeFSAReply(writeHigh);
+    expect(res).toHaveErrorCode(ErrorCodes.BAD_OUTPUT);
   });
 });
+
 describe('digitalRead', () => {
-  test('read pin config.TEST_DIGITAL_INPUT_PIN with pullup', async () => {
-    const modeAction = pinModeActionBuilder(
-      config.TEST_DIGITAL_INPUT_PIN,
-      board.MODES.PULLUP
-    );
-    const res1 = await postCommand(modeAction);
-    expect(res1).toBeFSAReply(modeAction);
-
-    const readAction = digitalReadActionBuilder(config.TEST_DIGITAL_INPUT_PIN);
-    const res2 = await postCommand(readAction);
-    expect(res2).toBeFSAReply(readAction);
-    expect(res2.payload.value).toBe(board.HIGH);
+  beforeAll(async () => {
+    const modeAction = pinModeActionBuilder(INPUT_PIN, board.MODES.PULLUP);
+    const res = await postCommand(modeAction);
+    expect(res).toBeFSAReply(modeAction);
   });
-  test('bad pin', async () => {
-    const modeAction = pinModeActionBuilder(
-      config.TEST_DIGITAL_INPUT_PIN,
-      board.MODES.PULLUP
-    );
-    const res1 = await postCommand(modeAction);
-    expect(res1).toBeFSAReply(modeAction);
 
+  test(`read pin ${INPUT_PIN} with pullup`, async () => {
+    const readAction = digitalReadActionBuilder(INPUT_PIN);
+    const res = await postCommand(readAction);
+    expect(res).toBeFSAReply(readAction);
+    expect(res.payload.value).toBe(board.HIGH);
+  });
+
+  test('bad pin', async () => {
     const readAction = digitalReadActionBuilder(BAD_PIN);
-    const res2 = await postCommand(readAction);
-    expect(res2).toBeFSAReply(readAction);
-    expect(res2).toHaveErrorCode(ErrorCodes.BAD_PIN);
+    const res = await postCommand(readAction);
+    expect(res).toBeFSAReply(readAction);
+    expect(res).toHaveErrorCode(ErrorCodes.BAD_PIN);
   });
 });
