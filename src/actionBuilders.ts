@@ -3,7 +3,7 @@
  * objects from a reduced set of parameters
  * @module
  */
-import Board from 'firmata';
+import type Board from 'firmata';
 import { FSA } from './types.js';
 
 /**

@@ -19,7 +19,7 @@ import { config as envRead } from 'dotenv';
 import express from 'express';
 import { createServer } from 'http';
 // https://github.com/firmata/firmata.js/tree/master/packages/firmata.js
-import Board from 'firmata';
+import Board from './my-firmata.js';
 
 envRead();
 
