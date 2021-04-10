@@ -46,6 +46,7 @@
     "jest-ts-webcompat-resolver": "^1.0.0",
     "node-fetch": "^2.6.1",
     "prettier": "^2.2.1",
+    "socket.io-client": "^4.0.1",
     "ts-jest": "^26.5.4",
     "ts-node-dev": "^1.1.6",
     "typedoc": "^0.20.32",
