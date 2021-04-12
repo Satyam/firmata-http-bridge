@@ -67,42 +67,53 @@ export default class Board extends Firmata {
     });
   }
 
-  reset() {
+  resetWithCallback(cb: (error?: SerialPort.callback) => void) {
     super.reset();
+    if (this.digitalReaders) {
+      this.digitalReaders.forEach((count: number, pin: number) => {
+        if (count) {
+          this.removeAllListeners(`digital-read-${pin}`);
+        }
+      });
+    }
+    if (this.analogReaders) {
+      this.analogReaders.forEach((count: number, pin: number) => {
+        if (count) {
+          this.removeAllListeners(`analog-read-${pin}`);
+        }
+      });
+    }
     const t = this.transport;
     if (t?.isOpen) {
       t.drain((error) => {
         if (error) {
-          console.error('in board.reset() drain', error);
+          cb(error);
         } else {
-          t.flush((error) => {
-            if (error) {
-              console.error('in board.reset() flush', error);
-            }
-          });
+          t.flush(cb);
         }
       });
+    } else {
+      cb();
     }
-    this.digitalReaders.forEach((count: number, pin: number) => {
-      if (count) {
-        this.removeAllListeners(`digital-read-${pin}`);
-      }
-    });
-    this.analogReaders.forEach((count: number, pin: number) => {
-      if (count) {
-        this.removeAllListeners(`analog-read-${pin}`);
-      }
+  }
+
+  reset() {
+    this.resetWithCallback((error) => {
+      if (error) console.error(error);
     });
   }
 
   close(cb: (error?: SerialPort.callback) => void) {
-    this.reset();
-    const t = this.transport;
-    if (t?.isOpen) {
-      t.drain((error) => {
-        if (error) cb(error);
-        else t.close(cb);
-      });
-    } else cb();
+    this.resetWithCallback((error) => {
+      if (error) cb(error);
+      else {
+        const t = this.transport;
+        if (t?.isOpen) {
+          t.close(cb);
+        } else {
+          cb();
+        }
+      }
+    });
   }
 }
