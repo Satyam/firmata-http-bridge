@@ -9,6 +9,7 @@ import {
   digitalReadSubscribe,
   digitalReadUnsubscribe,
 } from './pinCommands.js';
+
 import {
   pinModeActionBuilder,
   digitalWriteActionBuilder,
@@ -17,54 +18,60 @@ import {
   digitalReadUnsubscribeActionBuilder,
   makeReply,
 } from './actionBuilders.js';
+
 import { ErrorCodes } from './types.js';
 
 const BAD_PIN = 999;
 const BAD_MODE = 999;
+const INPUT_PIN = config.TEST_DIGITAL_INPUT_PIN;
+const OUTPUT_PIN = config.TEST_DIGITAL_OUTPUT_PIN;
+
+const outputModeAction = pinModeActionBuilder(OUTPUT_PIN, board.MODES.OUTPUT);
+
+const writeHigh = digitalWriteActionBuilder(OUTPUT_PIN, board.HIGH);
+const writeLow = digitalWriteActionBuilder(OUTPUT_PIN, board.LOW);
+
+const inputModeAction = pinModeActionBuilder(INPUT_PIN, board.MODES.PULLUP);
+
+const readSubscribeAction = digitalReadSubscribeActionBuilder(INPUT_PIN);
+const readUnsubscribeAction = digitalReadUnsubscribeActionBuilder(INPUT_PIN);
+const readAction = digitalReadActionBuilder(INPUT_PIN);
 
 beforeAll((done) => {
   extendJest(expect);
-  board.on('ready', done);
+  board.once('ready', done);
   board.on('error', (error) => {
     console.error(error);
-    done(error);
     // If it fails here it probably means the board is not connected or powered
-    // process.exit(1);
+    process.stdout.write('', () =>
+      process.stderr.write(`board error: ${error}`, () => process.exit(1))
+    );
   });
 });
 
-afterEach(() => board.reset());
+beforeEach((done) => board.resetWithCallback(done));
 
-afterAll((done) => {
-  // @ts-ignore
-  if (board?.transport?.isOpen)
-    // @ts-ignore
-    board.transport.close(done);
-  else done();
+afterEach((done) => {
+  setTimeout(done, 10);
 });
+
+afterAll((done) =>
+  board.close((error) => {
+    /* istanbul ignore if */
+    if (error) {
+      console.error('Closing board', error);
+      process.stdout.write('', () => {
+        process.stderr.write(`Server start: ${error}`, () => done(error));
+      });
+    } else done();
+  })
+);
 
 describe('pinMode', () => {
-  test('toBeFSAReply', () => {
-    const modeAction = pinModeActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      board.MODES.OUTPUT
-    );
-
-    expect(makeReply(modeAction)).toBeFSAReply(modeAction);
-    expect(modeAction).not.toBeFSAReply(modeAction);
-  });
-
   test('valid mode', () => {
-    const modeAction = pinModeActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      board.MODES.OUTPUT
-    );
-
-    expect(board.pins[config.TEST_DIGITAL_OUTPUT_PIN].mode).toBeUndefined();
-    expect(pinMode(modeAction)).toBeFSAReply(modeAction);
-    expect(board.pins[config.TEST_DIGITAL_OUTPUT_PIN].mode).toBe(
-      board.MODES.OUTPUT
-    );
+    expect(board.pins[OUTPUT_PIN].mode).toBeUndefined();
+    expect(pinMode(outputModeAction)).toBeFSAReply(outputModeAction);
+    expect(board.pins[OUTPUT_PIN].mode).toBe(board.MODES.OUTPUT);
   });
 
   test('invalid pin', () => {
@@ -76,10 +83,7 @@ describe('pinMode', () => {
   });
 
   test('invalid mode', () => {
-    const modeAction = pinModeActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      BAD_MODE
-    );
+    const modeAction = pinModeActionBuilder(OUTPUT_PIN, BAD_MODE);
     const response = pinMode(modeAction);
     expect(response).toBeFSAReply(modeAction);
     expect(response).toHaveErrorCode(ErrorCodes.BAD_MODE);
@@ -87,49 +91,23 @@ describe('pinMode', () => {
 });
 
 describe('digitalWrite', () => {
-  test('pin high', () => {
-    const modeAction = pinModeActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      board.MODES.OUTPUT
-    );
-    pinMode(modeAction);
+  beforeAll(() => {
+    pinMode(outputModeAction);
+  });
 
-    const writeHigh = digitalWriteActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      board.HIGH
-    );
-    expect(board.pins[config.TEST_DIGITAL_OUTPUT_PIN].value).toEqual(board.LOW);
+  test('pin high', () => {
+    expect(board.pins[OUTPUT_PIN].value).toEqual(board.LOW);
     expect(digitalWrite(writeHigh)).toBeFSAReply(writeHigh);
-    expect(board.pins[config.TEST_DIGITAL_OUTPUT_PIN].value).toEqual(
-      board.HIGH
-    );
+    expect(board.pins[OUTPUT_PIN].value).toEqual(board.HIGH);
   });
 
   test('pin low', () => {
-    const modeAction = pinModeActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      board.MODES.OUTPUT
-    );
-    pinMode(modeAction);
-
-    const writeLow = digitalWriteActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      board.LOW
-    );
-    expect(board.pins[config.TEST_DIGITAL_OUTPUT_PIN].value).toEqual(
-      board.HIGH
-    );
+    expect(board.pins[OUTPUT_PIN].value).toEqual(board.HIGH);
     expect(digitalWrite(writeLow)).toBeFSAReply(writeLow);
-    expect(board.pins[config.TEST_DIGITAL_OUTPUT_PIN].value).toEqual(board.LOW);
+    expect(board.pins[OUTPUT_PIN].value).toEqual(board.LOW);
   });
 
   test('bad pin', () => {
-    const modeAction = pinModeActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      board.MODES.OUTPUT
-    );
-    pinMode(modeAction);
-
     const writeHigh = digitalWriteActionBuilder(BAD_PIN, board.HIGH);
     const result = digitalWrite(writeHigh);
     expect(result).toBeFSAReply(writeHigh);
@@ -137,100 +115,96 @@ describe('digitalWrite', () => {
   });
 
   test('bad value', () => {
-    const modeAction = pinModeActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      board.MODES.OUTPUT
-    );
-    pinMode(modeAction);
-
-    const writeHigh = digitalWriteActionBuilder(
-      config.TEST_DIGITAL_OUTPUT_PIN,
-      BAD_MODE
-    );
+    const writeHigh = digitalWriteActionBuilder(OUTPUT_PIN, BAD_MODE);
     const result = digitalWrite(writeHigh);
     expect(result).toBeFSAReply(writeHigh);
     expect(result).toHaveErrorCode(ErrorCodes.BAD_OUTPUT);
   });
 });
-describe('digitalRead', () => {
-  test(`read pin ${config.TEST_DIGITAL_INPUT_PIN} with pullup`, async () => {
-    const modeAction = pinModeActionBuilder(
-      config.TEST_DIGITAL_INPUT_PIN,
-      board.MODES.PULLUP
-    );
-    pinMode(modeAction);
 
-    const readAction = digitalReadActionBuilder(config.TEST_DIGITAL_INPUT_PIN);
+describe('digitalRead', () => {
+  beforeAll(() => {
+    pinMode(inputModeAction);
+  });
+
+  test(`read pin ${INPUT_PIN} with pullup`, async () => {
     const res = await digitalRead(readAction);
     expect(res).toBeFSAReply(readAction);
     expect(res.payload.value).toBe(board.HIGH);
   });
 
   test('bad pin', async () => {
-    const modeAction = pinModeActionBuilder(
-      config.TEST_DIGITAL_INPUT_PIN,
-      board.MODES.PULLUP
-    );
-    pinMode(modeAction);
-
     const readAction = digitalReadActionBuilder(BAD_PIN);
     const res = await digitalRead(readAction);
     expect(res).toBeFSAReply(readAction);
     expect(res).toHaveErrorCode(ErrorCodes.BAD_PIN);
   });
 });
+
 describe('digitalReadSubscription', () => {
   beforeAll(() => {
-    const modeAction = pinModeActionBuilder(
-      config.TEST_DIGITAL_INPUT_PIN,
-      board.MODES.PULLUP
-    );
-    pinMode(modeAction);
+    pinMode(inputModeAction);
   });
 
-  test(`Subscribe to read pin ${config.TEST_DIGITAL_INPUT_PIN} with pullup`, (done) => {
-    const readSubscribeAction = digitalReadSubscribeActionBuilder(
-      config.TEST_DIGITAL_INPUT_PIN
-    );
-    const readUnsubscribeAction = digitalReadUnsubscribeActionBuilder(
-      config.TEST_DIGITAL_INPUT_PIN
-    );
-
-    const res1 = digitalReadSubscribe(readSubscribeAction, (value) => {
+  test(`Subscribe to read pin ${INPUT_PIN} with pullup`, (done) => {
+    const callback = (value: number) => {
       expect(value).toBe(board.HIGH);
-      const res2 = digitalReadUnsubscribe(readUnsubscribeAction);
+      const res2 = digitalReadUnsubscribe(readUnsubscribeAction, callback);
       expect(res2).toBeFSAReply(readUnsubscribeAction);
+      expect(board.digitalReaders[INPUT_PIN]).toBe(0);
       done();
-    });
-    expect(res1).toBeFSAReply(readSubscribeAction);
-  });
-  test(`Subscribe twice to read pin ${config.TEST_DIGITAL_INPUT_PIN} with pullup`, (done) => {
-    const readSubscribeAction = digitalReadSubscribeActionBuilder(
-      config.TEST_DIGITAL_INPUT_PIN
-    );
-    const readUnsubscribeAction = digitalReadUnsubscribeActionBuilder(
-      config.TEST_DIGITAL_INPUT_PIN
-    );
+    };
 
-    console.log('before', board.pins[config.TEST_DIGITAL_INPUT_PIN]);
-    const callback = jest.fn();
+    expect(board.digitalReaders[INPUT_PIN]).toBe(0);
     const res1 = digitalReadSubscribe(readSubscribeAction, callback);
     expect(res1).toBeFSAReply(readSubscribeAction);
 
-    console.log('middle', board.pins[config.TEST_DIGITAL_INPUT_PIN]);
+    expect(board.digitalReaders[INPUT_PIN]).toBe(1);
+  });
 
-    const res2 = digitalReadSubscribe(readSubscribeAction, (value) => {
-      console.log('second cb', board.pins[config.TEST_DIGITAL_INPUT_PIN]);
-      // expect(value).toBe(board.HIGH);
-      const res = digitalReadUnsubscribe(readUnsubscribeAction);
-      expect(res).toBeFSAReply(readUnsubscribeAction);
-      console.log('second cb unsub', board.pins[config.TEST_DIGITAL_INPUT_PIN]);
-      expect(callback).not.toBeCalled();
+  test(`Subscribe twice to read pin ${INPUT_PIN} with same callback`, (done) => {
+    const mockCallback = jest.fn((value: number) => {
+      const resU = digitalReadUnsubscribe(readUnsubscribeAction, mockCallback);
+      expect(resU).toBeFSAReply(readUnsubscribeAction);
+      expect(board.digitalReaders[INPUT_PIN]).toBe(0);
+      expect(mockCallback).toBeCalledTimes(1);
+      expect(mockCallback).toBeCalledWith(board.HIGH);
+      expect(value).toBe(board.HIGH);
       done();
     });
-    console.log('after', board.pins[config.TEST_DIGITAL_INPUT_PIN]);
+    expect(board.digitalReaders[INPUT_PIN]).toBe(0);
+
+    const res1 = digitalReadSubscribe(readSubscribeAction, mockCallback);
+    expect(res1).toBeFSAReply(readSubscribeAction);
+
+    expect(board.digitalReaders[INPUT_PIN]).toBe(1);
+    const res2 = digitalReadSubscribe(readSubscribeAction, mockCallback);
     expect(res2).toBeFSAReply(readSubscribeAction);
+    expect(res2.meta.alreadySubscribed).toBeTruthy();
+
+    expect(board.digitalReaders[INPUT_PIN]).toBe(1);
   });
+
+  test('digital read should get a good reading when already subscribed', (done) => {
+    const callback = (value: number) => {
+      expect(value).toBe(board.HIGH);
+      digitalRead(readAction).then((res) => {
+        expect(res).toBeFSAReply(readAction);
+        expect(res.payload.value).toBe(board.HIGH);
+        const res2 = digitalReadUnsubscribe(readUnsubscribeAction, callback);
+        expect(res2).toBeFSAReply(readUnsubscribeAction);
+        done();
+      });
+    };
+
+    expect(board.digitalReaders[INPUT_PIN]).toBe(0);
+    expect(board.listenerCount(`digital-read-${INPUT_PIN}`)).toBe(0);
+    const res1 = digitalReadSubscribe(readSubscribeAction, callback);
+    expect(res1).toBeFSAReply(readSubscribeAction);
+    expect(board.digitalReaders[INPUT_PIN]).toBe(1);
+    expect(board.listenerCount(`digital-read-${INPUT_PIN}`)).toBe(1);
+  });
+
   test('subscribe to bad pin', () => {
     const callback = jest.fn();
     const readSubscribeAction = digitalReadSubscribeActionBuilder(BAD_PIN);
