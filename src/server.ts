@@ -66,7 +66,7 @@ export function start(): Promise<void> {
 
     board.on('error', (error) => {
       console.error('board error', error);
-      setImmediate(() => reject(error));
+      reject(error);
     });
     board.once('ready', () => {
       console.log(`Arduino at ${config.USB_PATH} is ready to communicate`);
@@ -89,13 +89,13 @@ export function stop(): Promise<void> {
     http.close((error) => {
       if (error) {
         console.error('Closing http', error);
-        setImmediate(() => reject(error));
+        reject(error);
       } else
         board.close((error) => {
           /* istanbul ignore if */
           if (error) {
             console.error('Closing board', error);
-            setImmediate(() => reject(error));
+            reject(error);
           } else resolve();
         });
     });

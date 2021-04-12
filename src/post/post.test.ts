@@ -34,9 +34,11 @@ const OUTPUT_PIN = config.TEST_DIGITAL_OUTPUT_PIN;
 
 beforeAll(() => {
   extendJest(expect);
-  return start().catch(() => {
+  return start().catch((error) => {
     // If it fails here it probably means the board is not connected or powered
-    process.exit(1);
+    process.stdout.write('', () =>
+      process.stderr.write(`Server start: ${error}`, () => process.exit(1))
+    );
   });
 });
 

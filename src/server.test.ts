@@ -9,9 +9,11 @@ const BAD_PIN = 999;
 const BAD_MODE = 999;
 
 beforeAll(() =>
-  start().catch(() => {
+  start().catch((error) => {
     // If it fails here it probably means the board is not connected or powered
-    process.exit(1);
+    process.stdout.write('', () =>
+      process.stderr.write(`Server start: ${error}`, () => process.exit(1))
+    );
   })
 );
 
