@@ -9,9 +9,14 @@ import setupSockets from './sockets/index.js';
 
 // @ts-ignore
 import * as dn from './expose__dirname.cjs';
-
+/**
+ * Hack to fix the lack of the `__dirname` global
+ * variable in ESM modules for NodeJS.
+ * @private
+ * @param {string} relPath path to be resolved
+ * @return {*}  {string} path resolved from `__dirname`
+ */
 function pathResolve(relPath: string): string {
-  // const dirname = __dirname || dn.__dirname;
   return path.resolve(dn.__dirname, relPath);
 }
 /**
@@ -20,6 +25,8 @@ function pathResolve(relPath: string): string {
  *   `USB_PATH` command line option or environment variable.
  * * Launching a web server listening on the port specified in the
  *   `HTTP_PORT` command line option or environment variable.
+ * * Starts a `Sockets.io` server on the same address.
+ *
  * @export
  * @return {Promise} A promise returning nothing
  */

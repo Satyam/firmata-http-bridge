@@ -1,5 +1,5 @@
 /**
- * Functions to send the FSA commands to the board
+ * Functions to send the commands describe in the FSA to the board
  * @module
  */
 import { validDigitalPin, validMode, validOutput } from './utils.js';
@@ -15,25 +15,53 @@ import { FSA, ErrorCodes } from './types.js';
 import { makeReply } from './actionBuilders.js';
 import { board } from './config.js';
 
-type ImmediateCommand<F extends FSA = FSA, Meta = any> = (
+/**
+ * Describes the format of the synchronous commands sent to the board
+ * that are synchronous, that is, they return immediately.
+ * @typeParam F the shape of the FSA used in this command
+ * @typeParam Meta the shape of extra `meta` properties
+ * @exports
+ */
+export type ImmediateCommand<F extends FSA = FSA, Meta = any> = (
   action: F,
   meta?: Meta
 ) => FSA;
 
-type PromiseCommand<F extends FSA = FSA, Meta = any> = (
+/**
+ * Describes the format of the commands sent to the board
+ * that return a `Promise` that resolves to an FSA with the
+ * a single reply.
+ * @typeParam F the shape of the FSA used in this command
+ * @typeParam Meta the shape of extra `meta` properties
+ * @exports
+ */
+export type PromiseCommand<F extends FSA = FSA, Meta = any> = (
   action: F,
   meta?: Meta
 ) => Promise<FSA>;
 
+/**
+ * Describes the format of the commands sent to the board
+ * that produce multiple asynchronous replies and
+ * require a callback to receive the new  values.
+ *
+ * @typeParam F the shape of the FSA used in this command
+ * @typeParam CB callback that receives the the replies.
+ * @typeParam Meta the shape of extra `meta` properties
+ * @exports
+ */
 export type CallbackCommand<
   F extends FSA = FSA,
   CB = (value: number) => void,
   Meta = any
 > = (action: F, callback: CB, meta?: Meta) => FSA;
+
 /**
- * Describes the format of the commands dispatched from the web server.
+ * A union of the format of both the synchronous and asynchronous
+ * with single a single reply  commands send to the board.
  * @typeParam F the shape of the FSA used in this command
  * @typeParam Meta the shape of extra `meta` properties
+ * @exports
  */
 export type Commands<F extends FSA = FSA, Meta = any> =
   | ImmediateCommand<F, Meta>

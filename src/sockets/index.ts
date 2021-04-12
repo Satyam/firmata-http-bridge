@@ -6,7 +6,7 @@
 
 import { Server, Socket } from 'socket.io';
 
-import { app, http } from '../config.js';
+import { http } from '../config.js';
 import { FSA, ErrorCodes } from '../types.js';
 import {
   digitalRead,
@@ -17,7 +17,6 @@ import {
   Commands,
   CallbackCommand,
 } from '../pinCommands.js';
-import { makeReply, digitalReadActionBuilder } from '../actionBuilders.js';
 
 const commands: Record<string, Commands> = {
   digitalRead,
@@ -30,8 +29,8 @@ const cbCommands: Record<string, CallbackCommand> = {
   digitalReadUnsubscribe,
 };
 /**
- * Sets up a new socket server to accept the following FSA actions via sockets and
- * dispatches them.
+ * Sets up a new socket server to accept the following FSA actions via sockets
+ * on the `command` `eventName` and dispatches them.
  *
  * * `digitalReadFSA`
  * * `digitalReadSubscribeFSA`
@@ -40,10 +39,10 @@ const cbCommands: Record<string, CallbackCommand> = {
  * * `pinModeFSA`
  *
  * All replies will be *emitted* as JSON-encoded objects,
- * via sockets with the `reply` as the `eventName`
+ * via sockets with `reply` as the `eventName`.
  *
- * Once initialized it emits a message with `hello` as the `eventName` and `world` as the message,
- * which can be safely ignored.
+ * Once initialized it emits a message with `hello` as the `eventName` and `world` as the message
+ * for testing purposes, which can be safely ignored.
  */
 export default function setup(): void {
   const io = new Server(http);
@@ -53,6 +52,12 @@ export default function setup(): void {
       socket.emit('reply', JSON.stringify(reply));
     }
 
+    /*
+    It has to keep track of the callbacks used for each pin to listen to since the 
+    [`removeListener`](https://nodejs.org/docs/latest/api/events.html#events_emitter_removelistener_eventname_listener)
+    method needs to know which listener is to unsubscribe from.  It also prevents to subscribe twice with
+    the same callback, which is pointless in this context.
+    */
     const callbacks: Array<(value: number) => void> = [];
     const callback = (pin: number) => (value: number) => {
       socket.emit(
@@ -66,6 +71,7 @@ export default function setup(): void {
         })
       );
     };
+
     socket.on('command', async (msg) => {
       const action = JSON.parse(msg) as FSA;
 

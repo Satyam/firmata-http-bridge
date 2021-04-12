@@ -16,7 +16,6 @@ import {
   digitalReadActionBuilder,
   digitalReadSubscribeActionBuilder,
   digitalReadUnsubscribeActionBuilder,
-  makeReply,
 } from './actionBuilders.js';
 
 import { ErrorCodes } from './types.js';
