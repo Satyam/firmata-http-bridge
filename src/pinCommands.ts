@@ -139,8 +139,7 @@ export const digitalRead: PromiseCommand<digitalReadFSA> = (action) => {
       );
       return;
     }
-    board.digitalRead(pin, (value) => {
-      board.reportDigitalPin(pin, 0);
+    board.once(`digital-read-${pin}`, (value) => {
       resolve(makeReply(action, { payload: { value } }));
     });
   });
@@ -178,11 +177,12 @@ export const digitalReadSubscribe: CallbackCommand<digitalReadSubscribeFSA> = (
     });
   }
 
-  if (board.pins[pin].report) {
-    board.reportDigitalPin(pin, 0);
+  const eventName = `digital-read-${pin}`;
+  if (board.listeners(eventName).includes(callback)) {
+    return makeReply(action, { meta: { alreadySubscribed: true } });
   }
 
-  board.digitalRead(pin, callback);
+  board.on(eventName, callback);
   return makeReply(action);
 };
 
@@ -196,8 +196,9 @@ export const digitalReadSubscribe: CallbackCommand<digitalReadSubscribeFSA> = (
  * @param action - FSA action to send
  * @returns {FSA} A reply FSA
  */
-export const digitalReadUnsubscribe: ImmediateCommand<digitalReadUnsubscribeFSA> = (
-  action
+export const digitalReadUnsubscribe: CallbackCommand<digitalReadUnsubscribeFSA> = (
+  action,
+  callback
 ) => {
   const {
     payload: { pin },
@@ -211,6 +212,6 @@ export const digitalReadUnsubscribe: ImmediateCommand<digitalReadUnsubscribeFSA>
     });
   }
 
-  board.reportDigitalPin(pin, 0);
+  board.off(`digital-read-${pin}`, callback);
   return makeReply(action);
 };
