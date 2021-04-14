@@ -48,12 +48,6 @@ beforeAll((done) => {
   });
 });
 
-beforeEach((done) => board.resetWithCallback(done));
-
-afterEach((done) => {
-  setTimeout(done, 10);
-});
-
 afterAll((done) =>
   board.close((error) => {
     /* istanbul ignore if */
