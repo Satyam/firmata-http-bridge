@@ -20,14 +20,16 @@ const BAD_MODE = 999;
 const INPUT_PIN = config.TEST_DIGITAL_INPUT_PIN;
 const OUTPUT_PIN = config.TEST_DIGITAL_OUTPUT_PIN;
 
+const REPLY = 'reply';
+const COMMAND = 'command';
 const SERVER = `http://localhost:${config.HTTP_PORT}`;
 
 let socket: Socket;
 
 const postCommand: (action: FSA) => Promise<FSA> = (action) =>
   new Promise((resolve) => {
-    socket.once('reply', (res: string) => resolve(JSON.parse(res)));
-    socket.emit('command', JSON.stringify(action));
+    socket.once(REPLY, (res: string) => resolve(JSON.parse(res)));
+    socket.emit(COMMAND, JSON.stringify(action));
   });
 
 const outputModeAction = pinModeActionBuilder(OUTPUT_PIN, board.MODES.OUTPUT);
@@ -52,7 +54,7 @@ beforeAll(() => {
             expect(msg).toBe('world');
             resolve();
           });
-          socket.on('connect', () => {
+          socket.once('connect', () => {
             expect(typeof socket.id).toBe('string');
             expect(socket.id.length).toBeGreaterThan(0);
           });
@@ -66,10 +68,17 @@ beforeAll(() => {
     });
 });
 
-afterAll(() => {
-  stop();
+afterAll((done) => {
+  socket.on('disconnect', (reason) => {
+    if (reason === 'io client disconnect') {
+      stop().then(done, done);
+    } else {
+      done(reason);
+    }
+  });
   socket.close();
 });
+
 test('bad command', async () => {
   const res = await postCommand({
     type: 'nonsense',
@@ -171,22 +180,22 @@ describe('digitalRead by subscription', () => {
         case 1:
           expect(fsa).toBeFSAReply(readAction);
           expect(fsa.payload.value).toBe(board.HIGH);
-          socket.emit('command', JSON.stringify(readUnsubscribeAction));
+          socket.emit(COMMAND, JSON.stringify(readUnsubscribeAction));
           break;
         case 2:
           expect(fsa).toBeFSAReply(readUnsubscribeAction);
-          socket.off('reply', listener);
+          socket.off(REPLY, listener);
           done();
           break;
         default:
-          expect(true).toBeFalsy();
+          done(`Unexpected stage ${stage}`);
           break;
       }
       stage += 1;
     };
 
-    socket.on('reply', listener);
-    socket.emit('command', JSON.stringify(readSubscribeAction));
+    socket.on(REPLY, listener);
+    socket.emit(COMMAND, JSON.stringify(readSubscribeAction));
   });
 
   test(`Subscribe twice to read pin `, (done) => {
@@ -204,11 +213,11 @@ describe('digitalRead by subscription', () => {
         case 2:
           expect(fsa).toBeFSAReply(readAction);
           expect(fsa.payload.value).toBe(board.HIGH);
-          socket.emit('command', JSON.stringify(readUnsubscribeAction));
+          socket.emit(COMMAND, JSON.stringify(readUnsubscribeAction));
           break;
         case 3:
           expect(fsa).toBeFSAReply(readUnsubscribeAction);
-          socket.off('reply', listener);
+          socket.off(REPLY, listener);
           done();
           break;
         default:
@@ -218,9 +227,9 @@ describe('digitalRead by subscription', () => {
       stage += 1;
     };
 
-    socket.on('reply', listener);
-    socket.emit('command', JSON.stringify(readSubscribeAction));
-    socket.emit('command', JSON.stringify(readSubscribeAction));
+    socket.on(REPLY, listener);
+    socket.emit(COMMAND, JSON.stringify(readSubscribeAction));
+    socket.emit(COMMAND, JSON.stringify(readSubscribeAction));
   });
 
   test(`Mix simple read with subscription`, (done) => {
@@ -233,7 +242,7 @@ describe('digitalRead by subscription', () => {
       switch (fsa.type) {
         case 'digitalReadSubscribe_reply':
           expect(fsa).toBeFSAReply(readSubscribeAction);
-          socket.emit('command', JSON.stringify(readAction));
+          socket.emit(COMMAND, JSON.stringify(readAction));
           subscribed = true;
           break;
         case 'digitalRead_reply':
@@ -241,12 +250,12 @@ describe('digitalRead by subscription', () => {
           expect(fsa.payload.value).toBe(board.HIGH);
           digitalReadReplies += 1;
           if (digitalReadReplies == 2) {
-            socket.emit('command', JSON.stringify(readUnsubscribeAction));
+            socket.emit(COMMAND, JSON.stringify(readUnsubscribeAction));
           }
           break;
         case 'digitalReadUnsubscribe_reply':
           expect(fsa).toBeFSAReply(readUnsubscribeAction);
-          socket.off('reply', listener);
+          socket.off(REPLY, listener);
           unsubscribed = true;
           break;
         default:
@@ -256,7 +265,7 @@ describe('digitalRead by subscription', () => {
       if (subscribed && unsubscribed && digitalReadReplies > 1) done();
     };
 
-    socket.on('reply', listener);
-    socket.emit('command', JSON.stringify(readSubscribeAction));
+    socket.on(REPLY, listener);
+    socket.emit(COMMAND, JSON.stringify(readSubscribeAction));
   });
 });
