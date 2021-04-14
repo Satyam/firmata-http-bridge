@@ -11,7 +11,7 @@
     "postbuild": "cp src/expose__dirname.cjs dist",
     "test": "jest --runInBand",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
-    "coverage": "jest -w=1 --coverage --silent",
+    "coverage": "jest --runInBand --coverage --silent",
     "docs": "typedoc src/**/*.ts src/*.ts",
     "inspect": "node --loader ts-node/esm --inspect-brk -- src/index.ts"
   },
