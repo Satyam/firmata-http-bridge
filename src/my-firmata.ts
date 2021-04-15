@@ -92,8 +92,11 @@ export default class Board extends Firmata {
         this.digitalReaders[pin] += 1;
       }
       const matchAr = arRegex.exec(eventName);
+
+      // Analog reads not yet implemented
+      /* istanbul ignore if */
       if (matchAr) {
-        const pin = parseInt(matchDr[1], 10);
+        const pin = parseInt(matchAr[1], 10);
         if (this.analogReaders[pin] > 0) {
           this.reportAnalogPin(pin, 0);
         }
@@ -112,8 +115,10 @@ export default class Board extends Firmata {
         }
       }
       const matchAr = arRegex.exec(eventName);
+      // Analog reads not yet implemented
+      /* istanbul ignore if */
       if (matchAr) {
-        const pin = parseInt(matchDr[1], 10);
+        const pin = parseInt(matchAr[1], 10);
         this.analogReaders[pin] -= 1;
         if (this.analogReaders[pin] === 0) {
           this.reportAnalogPin(pin, 0);
@@ -138,6 +143,8 @@ export default class Board extends Firmata {
         }
       });
     }
+    // Analog reads not yet implemented
+    /* istanbul ignore if */
     if (this.analogReaders) {
       this.analogReaders.forEach((count: number, pin: number) => {
         if (count) {

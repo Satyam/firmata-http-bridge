@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 /// <reference types="jest" />
 import { ErrorCodes, FSA } from './types.js';
 
