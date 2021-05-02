@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 /// <reference types="jest" />
 import { ErrorCodes, FSA } from './types.js';
 
@@ -33,17 +34,15 @@ export default function setup(jestExpect: jest.Expect) {
           this.utils.printReceived(received);
 
         let pass = true;
-        pass =
-          pass &&
-          typeof meta === 'object' &&
-          toISOStringRegex.test(meta.date) &&
-          Object.keys(expectedPayload).every(
-            (name) => expectedPayload[name] === payload[name]
-          );
         if (type === `${expectedType}_reply`) {
+          pass &&=
+            typeof meta === 'object' &&
+            toISOStringRegex.test(meta.date) &&
+            Object.keys(expectedPayload).every(
+              (name) => expectedPayload[name] === payload[name]
+            );
         } else if (type === `${expectedType}_error`) {
-          pass =
-            pass &&
+          pass &&=
             typeof error === 'object' &&
             error.code in Object.keys(ErrorCodes) &&
             typeof error.msg === 'string';

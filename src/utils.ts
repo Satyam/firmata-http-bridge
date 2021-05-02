@@ -2,7 +2,7 @@
  * Contains various utility functions
  * @module
  */
-import Board from 'firmata';
+import type Board from 'firmata';
 
 /**
  * Validates that the pin number given is within the range of pins of the board.

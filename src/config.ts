@@ -19,14 +19,14 @@ import { config as envRead } from 'dotenv';
 import express from 'express';
 import { createServer } from 'http';
 // https://github.com/firmata/firmata.js/tree/master/packages/firmata.js
-import Board from 'firmata';
+import Board from './my-firmata.js';
 
 envRead();
 
 // patch to prevent commander to parse options passed to jest
 const argv = process.argv.filter(
   (part) =>
-    !['-w=1', '--coverage', '--silent', '-u', '--verbose'].includes(part)
+    !['--coverage', '--silent', '-u', '--verbose', '--runInBand'].includes(part)
 );
 
 const commander = new Command();
@@ -72,6 +72,14 @@ Example:
   )
   .parse(argv);
 
+/**
+ * Object containing the option settings from
+ * either the command line, the environment variables of the same name
+ * or defaults as described above.
+ *
+ * The `config` object is both the default export and a named
+ * export called `config`
+ */
 export const config = commander.opts() as {
   HTTP_PORT: number;
   USB_PATH: string;
@@ -79,8 +87,17 @@ export const config = commander.opts() as {
   TEST_DIGITAL_INPUT_PIN: number;
 };
 
+/**
+ * Contains the instance of the Express server software
+ */
 export const app = express();
+/**
+ * Instace of the barebones http server
+ */
 export const http = createServer(app);
+/**
+ * Instace of Firmata Board class
+ */
 export const board = new Board(config.USB_PATH);
 
 export default config;

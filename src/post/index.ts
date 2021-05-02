@@ -22,9 +22,10 @@ const commands: Record<string, Commands> = {
 };
 
 /**
- * Sets the express server to respond to HTTP POST commands,
- * containing the following FSA actions,
- * executes them and replies in a JSON-encoded FSA message.
+ * Sets the express server to respond to HTTP POST commands
+ * containing the FSA actions listed below,
+ * executes them and replies with the response
+ * in a JSON-encoded FSA message.
  *
  * * `digitalReadFSA`
  * * `digitalWriteFSA`

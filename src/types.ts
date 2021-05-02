@@ -5,9 +5,13 @@
  * @enum {number}
  */
 export enum ErrorCodes {
+  /** The FSA action contained an invalid `type` */
   BAD_ACTION_TYPE = 1,
+  /** The action refered to a non-existing pin number */
   BAD_PIN,
+  /** The mode requested for the pin is not supported */
   BAD_MODE,
+  /** The output requested on the pin is out of range */
   BAD_OUTPUT,
 }
 /**

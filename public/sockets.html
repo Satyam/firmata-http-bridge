@@ -129,31 +129,35 @@
 
       const replyEl = document.getElementById('replies');
 
+      const dateRegex = /^[\d\-]+T([\d\.:]*)Z$/;
       const formatTime = (dateString) => {
         const d = dateString ? new Date(dateString) : new Date();
-        return `${d.toLocaleTimeString()}, ${String(
-          d.getMilliseconds()
-        ).padStart(3, '0')}ms`;
+        return d.toISOString().replace(dateRegex, '$1');
       };
+
+      const breakObject = (obj) =>
+        Object.keys(obj)
+          .map((k) => `${k}=${obj[k]}`)
+          .join('; ');
 
       const logRequest = (request) => {
         const rowEl = replyEl.insertRow(0);
         rowEl.insertCell(-1).innerHTML = formatTime();
         rowEl.insertCell(-1).innerHTML = request.type;
-        rowEl.insertCell(-1).innerHTML = Object.keys(request.payload)
-          .map((k) => `${k}=${request.payload[k]}`)
-          .join('; ');
+        rowEl.insertCell(-1).innerHTML = breakObject(request.payload);
       };
+
       const logReply = (reply) => {
         const fsa = JSON.parse(reply);
+        const { date, alreadySubscribed } = fsa.meta;
         const rowEl = replyEl.insertRow(0);
-        rowEl.insertCell(-1).innerHTML = formatTime(fsa.meta.date);
+        rowEl.insertCell(-1).innerHTML = formatTime(date);
         rowEl.insertCell(-1).innerHTML = fsa.type;
-        rowEl.insertCell(-1).innerHTML = Object.keys(fsa.payload)
-          .map((k) => `${k}=${fsa.payload[k]}`)
-          .join('; ');
+        rowEl.insertCell(-1).innerHTML = breakObject(fsa.payload);
         rowEl.insertCell(-1).innerHTML = fsa.error
           ? `${fsa.error.code}: ${fsa.error.msg}`
+          : alreadySubscribed
+          ? 'warning: already subscribed'
           : '';
       };
 

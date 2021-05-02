@@ -9,9 +9,14 @@ import setupSockets from './sockets/index.js';
 
 // @ts-ignore
 import * as dn from './expose__dirname.cjs';
-
+/**
+ * Hack to fix the lack of the `__dirname` global
+ * variable in ESM modules for NodeJS.
+ * @private
+ * @param {string} relPath path to be resolved
+ * @return {*}  {string} path resolved from `__dirname`
+ */
 function pathResolve(relPath: string): string {
-  // const dirname = __dirname || dn.__dirname;
   return path.resolve(dn.__dirname, relPath);
 }
 /**
@@ -20,6 +25,8 @@ function pathResolve(relPath: string): string {
  *   `USB_PATH` command line option or environment variable.
  * * Launching a web server listening on the port specified in the
  *   `HTTP_PORT` command line option or environment variable.
+ * * Starts a `Sockets.io` server on the same address.
+ *
  * @export
  * @return {Promise} A promise returning nothing
  */
@@ -32,21 +39,21 @@ export function start(): Promise<void> {
     setupSockets();
 
     app.get('/dist/*', (req, res) => {
-      res.sendFile(req.path.replace(/\/dist\//, '/'), {
-        root: pathResolve('../dist'),
+      res.sendFile(req.path, {
+        root: pathResolve('../'),
         dotfiles: 'deny',
       });
     });
 
     app.get('/docs/*', (req, res) => {
-      res.sendFile(req.path.replace(/\/docs\//, '/'), {
-        root: pathResolve('../docs'),
+      res.sendFile(req.path, {
+        root: pathResolve('../'),
         dotfiles: 'deny',
       });
     });
     app.get('/coverage/*', (req, res) => {
-      res.sendFile(req.path.replace(/\/coverage\//, '/'), {
-        root: pathResolve('../coverage'),
+      res.sendFile(req.path, {
+        root: pathResolve('../'),
         dotfiles: 'deny',
       });
     });
@@ -64,8 +71,11 @@ export function start(): Promise<void> {
       });
     });
 
-    board.on('error', reject);
-    board.on('ready', () => {
+    board.on('error', (error) => {
+      console.error('board error', error);
+      reject(error);
+    });
+    board.once('ready', () => {
       console.log(`Arduino at ${config.USB_PATH} is ready to communicate`);
       http.listen(config.HTTP_PORT, () => {
         console.log(`Firmata bridge listening on port ${config.HTTP_PORT}!`);
@@ -83,15 +93,18 @@ export function start(): Promise<void> {
 export function stop(): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     console.log('Server closing');
-    http.close();
-    // @ts-ignore
-    if (board?.transport?.isOpen) {
-      // @ts-ignore
-      board.transport.close((error) => {
-        /* istanbul ignore if */
-        if (error) reject(error);
-        else resolve();
-      });
-    } else resolve();
+    http.close((error) => {
+      if (error) {
+        console.error('Closing http', error);
+        reject(error);
+      } else
+        board.close((error) => {
+          /* istanbul ignore if */
+          if (error) {
+            console.error('Closing board', error);
+            reject(error);
+          } else resolve();
+        });
+    });
   });
 }
