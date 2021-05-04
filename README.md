@@ -123,7 +123,7 @@ node .
 
 The best option when in development, is to compile and run all at once.  It will then keep watching the source files to check for changes and, if there is one, it will re-compile and relaunch the app.
 
-This way, you don't need to compile it first, and it will keep the app running updated versions when you change the source files. 
+This way, you don't need to compile it first, and it will keep the app running updated versions when you change the source files.
 
 It is not recommended for production.
 
@@ -216,7 +216,7 @@ USB_PATH=/dev/ttyACM1
 * `USB_PATH`: Defaults to `/dev/ttyACM0` which is the standard port used by Firmata for Linux.  The correct value can be found by letting the Arduino IDE find it for you.
 * `TEST_DIGITAL_OUTPUT_PIN`: defaults to 13, where the Arduino board usually has the LED connected. This value is used only for running tests, and it is the pin number used for digital output commands.
 * `TEST_DIGITAL_INPUT_PIN`: defaults to 2. This value is used only for running tests, and it is the pin number used for digital input commands.
-  
+
 ## API
 
 API stands for Application Programming Interface and, with a web server, it is represented by the type of the communication in between clients and server and the format of the messages in between them.
@@ -237,7 +237,7 @@ There will be references to the bits of code relevant to the part being explaine
 
 Most commands can be issued from the location bar on any browser, there is no need to do any programming. It is as if you were asking for a regular web page but the server reads the information from the URL and assembles the reply on the fly.  
 
-It is not really practical for programming purposes, as the replies are simple text or html, which makes them easier for people to read but harder to understand (that is *parse*) by a program. 
+It is not really practical for programming purposes, as the replies are simple text or html, which makes them easier for people to read but harder to understand (that is *parse*) by a program.
 
 Also, the commands implemented are very simple requiring at most two parameters.  If more options were to be needed, concatenating more and more parameters into the URL becomes a nightmare.  That is why, in some web sites, you see URLs with very long strings of seemingly random characters.  Sometimes they are JSON-encoded objects containing the parameters which are then [Base64 encoded](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs#encoding_data_into_base64_format) or [url-encoded](https://www.w3schools.com/tags/ref_urlencode.ASP) to avoid conflicting characters, or some other means of packing all the parameters into a string, for example [Google Maps StreetView images](https://www.google.com/maps/@41.2430273,1.8120463,3a,75y,111.63h,88.29t/data=!3m7!1e1!3m5!1sceei56sWBpNMz0J9o64Ogg!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fpanoid%3Dceei56sWBpNMz0J9o64Ogg%26cb_client%3Dmaps_sv.tactile.gps%26w%3D203%26h%3D100%26yaw%3D232.36258%26pitch%3D0%26thumbfov%3D100!7i16384!8i8192)
 
@@ -253,7 +253,7 @@ The parameters needed for each command are appended to the base URL, separated w
 
 All those `app.get(url, ...)` calls tell the web server application `app` to listen for HTTP GET commands on the given URLs and respond with whatever content is required.  The second row in the table above is served by a wildcard URL `app.get('*', ...)` which is the fallback the end of the chain of choices.  The [Express](http://expressjs.com/) web server checks the received URLs against all those `app.get` in sequence, in the order they are found in the source code and branches off on the first match.  You have to list all those `app.get` in decreasing order of specificity, the most specific first and the `app.get('*')` as the very least, being the catch all for all the rest of the HTTP GET and if even that one fails, it will respond with the classic `404 Page not found`.
 
-The responses are sent via the `res.send` for textual or HTML pages assembled on the fly or by `res.sendFile` when we mean to send a static file.  The `path` to the file to be send is taken from the request `req` which is resolved to the path given in the `root` option to `res.sendFile`. 
+The responses are sent via the `res.send` for textual or HTML pages assembled on the fly or by `res.sendFile` when we mean to send a static file.  The `path` to the file to be send is taken from the request `req` which is resolved to the path given in the `root` option to `res.sendFile`.
 
 While the `version` command takes no parameters because it applies to the whole board, other commands as the `digitalWrite`, the last one on the table above, requires a `pin` and an `output` value to be send to the board.  These extra parameters are specified by the colons in the URL path:  [`app.get('/digitalWrite/:pin/:output, ....`](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L75).  This means that the `pin` and `output` appear as *folders* in the URL path.  
 
@@ -278,7 +278,7 @@ The HTTP GET commands are:
 
 #### GET Analog Pins
 
-`GET` on `http://localhost:8000/AnalogPins` will return an array with a list of pin numbers available for analog input [ :octocat: ](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L38-L40).    A sample response might show: 
+`GET` on `http://localhost:8000/AnalogPins` will return an array with a list of pin numbers available for analog input [ :octocat: ](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/index.ts#L38-L40).    A sample response might show:
 ```
  [
   14,
@@ -356,7 +356,7 @@ An HTTP GET on `http://localhost:8000/digitalRead/2` would read a single value f
 
 ```
 Pin 2 returned 1
-// or: 
+// or:
 Pin 2 returned 0
 ```
 
@@ -371,7 +371,7 @@ A request to `http://localhost:8000/someFile.txt`  will return the file `public/
 
 If no such file is found, it will return with a `404 -- Page Not Found` error.
 
-The existing `public/index.html` provides a means to try out some sample commands. 
+The existing `public/index.html` provides a means to try out some sample commands.
 
 It also provides links to other files and folders in the server:
 
@@ -383,7 +383,7 @@ It also provides links to other files and folders in the server:
 
 ### HTTP POSTs
 
-As mentioned before, using HTTP GET has the problem of the size of the URL that can be sent safely.  Originally there was a 2kByte limit but most browsers now support [longer URLs](https://stackoverflow.com/questions/812925/what-is-the-maximum-possible-length-of-a-query-string) and different servers also have their limits. 
+As mentioned before, using HTTP GET has the problem of the size of the URL that can be sent safely.  Originally there was a 2kByte limit but most browsers now support [longer URLs](https://stackoverflow.com/questions/812925/what-is-the-maximum-possible-length-of-a-query-string) and different servers also have their limits.
 
 Using HTTP GET also brings the issue of confusing URLs for the user.  So far, the commands we've issued for Firmata are short and clear enough, not so for other applications, as already mentioned.
 
@@ -410,7 +410,7 @@ We adopted the convention of using an object with the following properties:
 * `payload`: an object containing the parameters required for the requested action, as properties.
 * `meta`: additional information not directly related to the action
 * `error`: an object containing a numerical `code` and a human readable `msg`.
-  
+
 The actual standard is somewhat lax in what the last three, optional, properties might be.  They can all be simple values (for example, if the action requires just one parameter, the `payload` might contain its value instead of an object with a property containing its value). In the standard, the `error` property must be a boolean, with the error detail in the `payload`, but that would either replace the parameters, which are important to determine what the error is about, or mix up with them, making it somewhat confusing.   The format presented above is the one we adopted for this app.
 
 Being a JavaScript object, an FSA is easy to transmit as a JSON string both for commands and replies.
@@ -604,7 +604,7 @@ The [digitalReadSubscribe :octocat:](https://github.com/Satyam/firmata-http-brid
   "type":"digitalReadSubscribe",
   "payload": {
     "pin": 2
-  } 
+  }
 }
 ```
 
@@ -654,7 +654,7 @@ The [digitalReadUnsubscribe :octocat:](https://github.com/Satyam/firmata-http-br
   "type":"digitalReadUnsubscribe",
   "payload": {
     "pin": 2
-  } 
+  }
 }
 ```
 No further [`digitalRead_reply`](#digitalread_reply) messages will be received at the client unless a `digitalRead` command is sent (which is still available) or a new read subscription is made.
@@ -693,7 +693,7 @@ An Integration Test goes all the way from end to end.  It tests the app as a who
 
 Thus, for example, there is no `actionBuilders.test.ts` file, however, by doing integration tests, the code in `actionBuilders.ts` has been almost fully tested, just because they were called by other tests.
 
-### Structure of a test.
+### Structure of a test
 
 We will use the [`pinCommands.test.ts` :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/pinCommands.test.ts) as a sample.  This is called a *test suite*, that is, a collection of related individual tests.  So, there is not just a big tests, there can be dozens or hundreds of individual tests, grouped into *suites*.
 
@@ -701,7 +701,7 @@ After importing the various pieces we need to perform the tests, we do some [bas
 
 * `beforeAll`  runs once before any test,
 * `afterAll` runs once after all tests have been run and
-  
+
 There are a `beforeEach` and `afterEach` as well, which run before and after each individual test.
 
 Then, you start grouping your tests with `describe` calls in any way you want.  `describe` is not required and only serves to get your individual tests organized and to provide a descriptive message if anyone fails.  
@@ -730,7 +730,7 @@ So, if this expectation is fulfilled, the test passes.
 
 Does Jest have checks specific for FSAs?  Not really, but you can extend the testing library with your own tests and once a group of tests is repeated over and over, you are likely to extend it on your own to make your life easier.  Both `toBeFSAReply` and `toHaveErrorCode` are extensions created for this set of tests.
 
-Jest provides a whole set of various [expectations](https://jestjs.io/docs/expect), such as those used on the lines before and after the line we analyzed. 
+Jest provides a whole set of various [expectations](https://jestjs.io/docs/expect), such as those used on the lines before and after the line we analyzed.
 
 ```js
 expect(board.pins[config.TEST_DIGITAL_OUTPUT_PIN].value).toEqual(board.LOW);
@@ -745,3 +745,7 @@ In another test we check for an error reply to a [bad pin :octocat:](https://git
 In tests such as [`server.test.ts` :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/server.test.ts) or [`simple.test.ts` :octocat:](https://github.com/Satyam/firmata-http-bridge/blob/main/src/simple/simple.test.ts) we actually start the server and use a slightly modified version of `postCommand` to send actual HTTP request to that server, thus fully testing the app from end to end.
 
 Not everything has tests, though it can and should.  I meant to do all the tests but then, it is interesting to show how the coverage report show the code that has no tests.  Thus, I left it for homework. It is also interesting to make a test fail, by messing up with an expectation and see how a bad test is reported.
+
+### Final remarks
+
+What does *Firmata* stand for? Does it maybe come from the italian *firmare* which means *to sign*?
